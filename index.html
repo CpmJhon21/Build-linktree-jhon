@@ -3,176 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linktree Builder Premium</title>
+    <title>Linktree Builder Premium | Create Beautiful Linktree Pages</title>
+    <meta name="description" content="Free Linktree Builder - Create beautiful linktree pages without coding. Download HTML ready for Netlify, Vercel, GitHub Pages.">
+    
+    <!-- Favicon (Base64) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <!-- Linktree Builder Library -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/style.css">
-    <!-- Custom CSS -->
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-tree"></i> Linktree Builder <span class="premium-badge">PREMIUM</span></h1>
-            <p class="subtitle">Buat halaman linktree profesional dengan GUI premium. Tanpa kode, langsung deploy!</p>
-        </header>
-
-        <div class="app-container">
-            <!-- Sidebar Form -->
-            <div class="sidebar">
-                <div class="form-section">
-                    <h2><i class="fas fa-cog"></i> Konfigurasi Profil</h2>
-                    
-                    <div class="form-group">
-                        <label for="img"><i class="fas fa-image"></i> Foto Profil (URL)</label>
-                        <input type="text" id="img" placeholder="https://example.com/foto.jpg">
-                        <div class="input-hint">Gunakan URL gambar persegi (1:1) untuk hasil terbaik</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nama"><i class="fas fa-user"></i> Nama</label>
-                        <input type="text" id="nama" placeholder="Nama atau Brand Anda">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="deskripsi"><i class="fas fa-file-alt"></i> Deskripsi / Bio</label>
-                        <textarea id="deskripsi" placeholder="Deskripsi singkat tentang Anda..." rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-hashtag"></i> Media Sosial</label>
-                        <div class="dynamic-container" id="medsos-container">
-                            <div class="dynamic-item">
-                                <select class="platform-select">
-                                    <option value="">Pilih Platform</option>
-                                    <option value="youtube.com">YouTube</option>
-                                    <option value="instagram.com">Instagram</option>
-                                    <option value="github.com">GitHub</option>
-                                    <option value="linkedin.com">LinkedIn</option>
-                                    <option value="twitter.com">Twitter / X</option>
-                                    <option value="facebook.com">Facebook</option>
-                                    <option value="t.me">Telegram</option>
-                                    <option value="discord.com">Discord</option>
-                                    <option value="spotify.com">Spotify</option>
-                                    <option value="whatsapp">WhatsApp</option>
-                                    <option value="tiktok.com">TikTok</option>
-                                </select>
-                                <input type="text" class="url-input" placeholder="URL lengkap (https://...)">
-                                <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
-                            </div>
-                        </div>
-                        <button type="button" id="add-medsos" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Media Sosial</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-link"></i> Custom Links</label>
-                        <div class="dynamic-container" id="links-container">
-                            <div class="dynamic-item">
-                                <input type="text" class="link-text" placeholder="Teks Link">
-                                <input type="text" class="link-url" placeholder="URL tujuan">
-                                <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
-                            </div>
-                        </div>
-                        <button type="button" id="add-link" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Link</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="footer"><i class="fas fa-copyright"></i> Footer Text</label>
-                        <input type="text" id="footer" placeholder="© 2024 Your Brand">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="template"><i class="fas fa-palette"></i> Template Style</label>
-                        <div class="template-selector">
-                            <div class="template-option active" data-template="1">
-                                <div class="template-preview pixel"></div>
-                                <span>Pixel Modern</span>
-                            </div>
-                            <div class="template-option" data-template="2">
-                                <div class="template-preview minimal"></div>
-                                <span>Minimal Clean</span>
-                            </div>
-                            <div class="template-option" data-template="3">
-                                <div class="template-preview neon"></div>
-                                <span>Cyber Neon</span>
-                            </div>
-                        </div>
-                        <input type="hidden" id="template" value="1">
-                    </div>
-
-                    <div class="form-actions">
-                        <button id="preview-btn" class="btn-primary"><i class="fas fa-eye"></i> Preview & Generate HTML</button>
-                        <button id="reset-btn" class="btn-secondary"><i class="fas fa-redo"></i> Reset Form</button>
-                    </div>
-                </div>
-
-                <div class="instructions">
-                    <h3><i class="fas fa-lightbulb"></i> Cara Menggunakan:</h3>
-                    <ol>
-                        <li>Isi semua field di atas</li>
-                        <li>Klik "Preview & Generate HTML"</li>
-                        <li>Salin atau download HTML</li>
-                        <li>Upload ke Vercel/Netlify sebagai static site</li>
-                    </ol>
-                </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-tree"></i>
+                <span>Linktree<span class="highlight">Builder</span></span>
+                <span class="badge">PREMIUM</span>
             </div>
-
-            <!-- Preview Section -->
-            <div class="preview-section">
-                <div class="preview-header">
-                    <h2><i class="fas fa-desktop"></i> Live Preview</h2>
-                    <div class="preview-actions">
-                        <button id="copy-btn" class="btn-success" disabled><i class="fas fa-copy"></i> Copy HTML</button>
-                        <button id="download-btn" class="btn-success" disabled><i class="fas fa-download"></i> Download HTML</button>
-                    </div>
-                </div>
-
-                <div class="preview-container">
-                    <div class="iframe-container">
-                        <div class="iframe-placeholder" id="iframe-placeholder">
-                            <i class="fas fa-tree"></i>
-                            <p>Preview akan muncul di sini setelah mengisi form</p>
-                        </div>
-                        <iframe id="preview-frame" srcdoc=""></iframe>
-                    </div>
-
-                    <div class="output-section">
-                        <h3><i class="fas fa-code"></i> Generated HTML</h3>
-                        <div class="code-container">
-                            <pre id="html-output"><code class="language-html">// HTML akan muncul di sini...</code></pre>
-                            <div class="copy-overlay" id="copy-overlay">
-                                <i class="fas fa-check"></i> Copied!
-                            </div>
-                        </div>
-                        <div class="deploy-info">
-                            <h4><i class="fas fa-rocket"></i> Cara Deploy:</h4>
-                            <p>Salin kode HTML di atas, buat file <code>index.html</code>, upload ke:</p>
-                            <div class="deploy-buttons">
-                                <a href="https://vercel.com" target="_blank" class="deploy-btn vercel">Vercel</a>
-                                <a href="https://netlify.com" target="_blank" class="deploy-btn netlify">Netlify</a>
-                                <a href="https://github.com" target="_blank" class="deploy-btn github">GitHub Pages</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link"><i class="fas fa-star"></i> Features</a>
+                <a href="#howto" class="nav-link"><i class="fas fa-question-circle"></i> How To</a>
+                <a href="https://github.com" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a>
             </div>
         </div>
+    </nav>
 
-        <footer class="footer">
-            <p>Linktree Builder Premium &copy; 2024 - Dibuat dengan <i class="fas fa-heart"></i> menggunakan Vanilla JS</p>
-            <p class="footer-note">No Backend | No Database | 100% Client Side</p>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">Create Stunning Linktree Pages</span>
+                </h1>
+                <p class="hero-subtitle">
+                    No coding required. Build your perfect linktree page with our premium GUI builder.
+                    Download HTML ready for Netlify, Vercel, GitHub Pages, Replit.
+                </p>
+                <div class="hero-badges">
+                    <span class="platform-badge"><i class="fab fa-github"></i> GitHub Pages</span>
+                    <span class="platform-badge"><i class="fas fa-cloud"></i> Netlify</span>
+                    <span class="platform-badge"><i class="fab fa-vercel"></i> Vercel</span>
+                    <span class="platform-badge"><i class="fas fa-code"></i> Replit</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Builder Section -->
+        <section class="builder-section">
+            <div class="builder-container">
+                <!-- Left: Form Builder -->
+                <div class="form-panel">
+                    <div class="panel-header">
+                        <i class="fas fa-sliders-h"></i>
+                        <h2>Linktree Configuration</h2>
+                        <div class="header-actions">
+                            <button id="save-btn" class="btn-save" title="Save to Browser">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button id="load-btn" class="btn-load" title="Load from Browser">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-content">
+                        <!-- Profile Section -->
+                        <div class="form-group-card">
+                            <div class="card-header">
+                                <i class="fas fa-user-circle"></i>
+                                <h3>Profile Information</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="profile-img">
+                                        <i class="fas fa-image"></i> Profile Image URL
+                                    </label>
+                                    <input type="text" id="profile-img" 
+                                           placeholder="https://example.com/photo.jpg"
+                                           value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop">
+                                    <div class="input-note">
+                                        Use square image (1:1 ratio) for best results
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="profile-name">
+                                        <i class="fas fa-signature"></i> Your Name
+                                    </label>
+                                    <input type="text" id="profile-name" 
+                                           placeholder="John Doe"
+                                           value="John Doe">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="profile-desc">
+                                        <i class="fas fa-align-left"></i> Bio Description
+                                    </label>
+                                    <textarea id="profile-desc" rows="3" 
+                                              placeholder="Describe yourself or your brand...">Digital Creator | Web Developer | Tech Enthusiast</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media Section -->
+                        <div class="form-group-card">
+                            <div class="card-header">
+                                <i class="fas fa-share-alt"></i>
+                                <h3>Social Media Links</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="social-container">
+                                    <!-- Social items will be added here -->
+                                </div>
+                                <button type="button" id="add-social-btn" class="btn-add">
+                                    <i class="fas fa-plus-circle"></i> Add Social Media
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Links Section -->
+                        <div class="form-group-card">
+                            <div class="card-header">
+                                <i class="fas fa-link"></i>
+                                <h3>Custom Links</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="links-container">
+                                    <!-- Link items will be added here -->
+                                </div>
+                                <button type="button" id="add-link-btn" class="btn-add">
+                                    <i class="fas fa-plus-circle"></i> Add Custom Link
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Footer & Template Section -->
+                        <div class="form-group-card">
+                            <div class="card-header">
+                                <i class="fas fa-cog"></i>
+                                <h3>Settings & Template</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="footer-text">
+                                        <i class="fas fa-copyright"></i> Footer Text
+                                    </label>
+                                    <input type="text" id="footer-text" 
+                                           placeholder="© 2024 Your Brand"
+                                           value="© 2024 John Doe. All rights reserved.">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-palette"></i> Choose Template
+                                    </label>
+                                    <div class="template-grid">
+                                        <div class="template-option" data-template="1">
+                                            <div class="template-preview pixel-bg">
+                                                <div class="template-label">Pixel Modern</div>
+                                            </div>
+                                            <span class="template-name">Pixel Modern</span>
+                                        </div>
+                                        <div class="template-option active" data-template="2">
+                                            <div class="template-preview minimal-bg">
+                                                <div class="template-label">Minimal Clean</div>
+                                            </div>
+                                            <span class="template-name">Minimal Clean</span>
+                                        </div>
+                                        <div class="template-option" data-template="3">
+                                            <div class="template-preview neon-bg">
+                                                <div class="template-label">Cyber Neon</div>
+                                            </div>
+                                            <span class="template-name">Cyber Neon</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="selected-template" value="2">
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="form-actions">
+                                    <button id="generate-btn" class="btn-primary btn-lg">
+                                        <i class="fas fa-bolt"></i> Generate & Preview
+                                    </button>
+                                    <button id="reset-btn" class="btn-secondary">
+                                        <i class="fas fa-redo"></i> Reset All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Preview & Output -->
+                <div class="preview-panel">
+                    <div class="panel-header">
+                        <i class="fas fa-eye"></i>
+                        <h2>Live Preview</h2>
+                        <div class="preview-controls">
+                            <div class="device-toggle">
+                                <button class="device-btn active" data-device="desktop">
+                                    <i class="fas fa-desktop"></i>
+                                </button>
+                                <button class="device-btn" data-device="mobile">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </button>
+                                <button class="device-btn" data-device="tablet">
+                                    <i class="fas fa-tablet-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Container -->
+                    <div class="preview-container">
+                        <div class="preview-wrapper" id="preview-wrapper">
+                            <div class="preview-placeholder" id="preview-placeholder">
+                                <i class="fas fa-magic"></i>
+                                <h3>Preview Your Linktree</h3>
+                                <p>Fill the form and click "Generate & Preview" to see your linktree page here.</p>
+                            </div>
+                            <iframe id="preview-frame" srcdoc=""></iframe>
+                        </div>
+
+                        <!-- Output Controls -->
+                        <div class="output-controls">
+                            <button id="copy-btn" class="btn-success" disabled>
+                                <i class="fas fa-copy"></i> Copy HTML Code
+                            </button>
+                            <button id="download-btn" class="btn-success" disabled>
+                                <i class="fas fa-download"></i> Download HTML File
+                            </button>
+                            <div class="copy-feedback" id="copy-feedback">
+                                <i class="fas fa-check"></i> Copied to clipboard!
+                            </div>
+                        </div>
+
+                        <!-- Generated HTML -->
+                        <div class="code-section">
+                            <div class="code-header">
+                                <i class="fas fa-code"></i>
+                                <h3>Generated HTML Code</h3>
+                                <div class="code-info">
+                                    <span class="file-info">
+                                        <i class="fas fa-file-code"></i> index.html
+                                    </span>
+                                    <span class="size-info" id="file-size">0 KB</span>
+                                </div>
+                            </div>
+                            <div class="code-container">
+                                <pre id="html-output"><code class="language-html">// Your generated HTML will appear here...</code></pre>
+                            </div>
+                        </div>
+
+                        <!-- Deploy Instructions -->
+                        <div class="deploy-section">
+                            <div class="deploy-header">
+                                <i class="fas fa-rocket"></i>
+                                <h3>Deploy to Platform</h3>
+                            </div>
+                            <div class="deploy-steps">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <h4>Download HTML</h4>
+                                        <p>Click "Download HTML File" above to save your linktree page.</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <h4>Upload to Platform</h4>
+                                        <p>Upload the downloaded file to your preferred platform:</p>
+                                        <div class="platform-buttons">
+                                            <a href="https://vercel.com" target="_blank" class="platform-btn vercel">
+                                                <i class="fab fa-vercel"></i> Vercel
+                                            </a>
+                                            <a href="https://netlify.com" target="_blank" class="platform-btn netlify">
+                                                <i class="fas fa-cloud"></i> Netlify
+                                            </a>
+                                            <a href="https://replit.com" target="_blank" class="platform-btn replit">
+                                                <i class="fas fa-code"></i> Replit
+                                            </a>
+                                            <a href="https://pages.github.com" target="_blank" class="platform-btn github">
+                                                <i class="fab fa-github"></i> GitHub Pages
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <div class="section-header">
+                <h2>Premium Features</h2>
+                <p>Everything you need to create a stunning linktree page</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Preview</h3>
+                    <p>See your changes in real-time with our live preview system.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>3 Premium Templates</h3>
+                    <p>Choose from Pixel Modern, Minimal Clean, or Cyber Neon styles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Fully Responsive</h3>
+                    <p>Your linktree will look perfect on all devices and screen sizes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>No Backend Required</h3>
+                    <p>100% static HTML. No server, no database, no login required.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How To Section -->
+        <section id="howto" class="howto-section">
+            <div class="section-header">
+                <h2>How To Use</h2>
+                <p>Get your linktree page online in 3 simple steps</p>
+            </div>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>Configure Your Profile</h3>
+                        <p>Fill in your profile details, add social media links and custom links using our intuitive form builder.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>Choose Template & Preview</h3>
+                        <p>Select from our premium templates and see your linktree page live in the preview panel.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>Download & Deploy</h3>
+                        <p>Download the HTML file and upload to Netlify, Vercel, GitHub Pages, or Replit. Done!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <i class="fas fa-tree"></i>
+                        <span>Linktree<span class="highlight">Builder</span></span>
+                    </div>
+                    <p>Create beautiful linktree pages without coding.</p>
+                    <div class="social-links">
+                        <a href="https://github.com" target="_blank" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://twitter.com" target="_blank" class="social-link">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="mailto:hello@example.com" class="social-link">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Platforms</h4>
+                        <a href="https://vercel.com" target="_blank">Vercel</a>
+                        <a href="https://netlify.com" target="_blank">Netlify</a>
+                        <a href="https://pages.github.com" target="_blank">GitHub Pages</a>
+                        <a href="https://replit.com" target="_blank">Replit</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#" id="export-data">Export Data</a>
+                        <a href="#" id="import-data">Import Data</a>
+                        <a href="#features">Features</a>
+                        <a href="#howto">How To Use</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Linktree Builder. All rights reserved. | Made with <i class="fas fa-heart"></i> using Vanilla JS</p>
+                <p class="footer-note">No Backend Required • 100% Static • No Database • No Login</p>
+            </div>
         </footer>
     </div>
 
-    <!-- Linktree Builder JS -->
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Template CSS Files -->
+    <link id="template-css" rel="stylesheet" href="templates/template2.css">
+
+    <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/script.js"></script>
-    <!-- Custom JS -->
     <script src="main.js"></script>
 </body>
 </html>
