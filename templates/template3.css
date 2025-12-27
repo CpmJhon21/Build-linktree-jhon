@@ -1,6 +1,7 @@
-/* TEMPLATE 3 – CYBER NEON */
-/* Created for Linktree Builder */
+/* TEMPLATE 3 - CYBER NEON */
+/* Compatible with Linktree Builder Library */
 
+/* Reset and Base */
 * {
     margin: 0;
     padding: 0;
@@ -218,7 +219,7 @@ body {
     z-index: 1;
 }
 
-.link-button {
+.linktree-btn {
     padding: 22px 32px;
     border-radius: 12px;
     text-decoration: none;
@@ -243,7 +244,7 @@ body {
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
-.link-button::before {
+.linktree-btn::before {
     content: '';
     position: absolute;
     top: 0;
@@ -259,7 +260,7 @@ body {
     transition: left 0.8s ease;
 }
 
-.link-button:hover {
+.linktree-btn:hover {
     transform: translateY(-6px);
     box-shadow: 
         0 0 30px rgba(0, 255, 255, 0.6),
@@ -273,11 +274,11 @@ body {
     );
 }
 
-.link-button:hover::before {
+.linktree-btn:hover::before {
     left: 100%;
 }
 
-.link-button i {
+.linktree-btn i {
     font-size: 22px;
     min-width: 24px;
     filter: drop-shadow(0 0 5px currentColor);
@@ -424,7 +425,7 @@ body::before {
         font-size: 22px;
     }
     
-    .link-button {
+    .linktree-btn {
         padding: 20px 24px;
         font-size: 14px;
     }
