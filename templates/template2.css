@@ -1,7 +1,6 @@
-/* TEMPLATE 2 - MINIMAL CLEAN */
-/* Compatible with Linktree Builder Library */
+/* TEMPLATE 2 – MINIMAL CLEAN */
+/* Created for Linktree Builder */
 
-/* Reset and Base */
 * {
     margin: 0;
     padding: 0;
@@ -148,7 +147,7 @@ body {
     transition: all 0.3s ease;
 }
 
-.linktree-btn {
+.link-button {
     padding: 20px 28px;
     border-radius: 16px;
     text-decoration: none;
@@ -171,7 +170,7 @@ body {
     overflow: hidden;
 }
 
-.linktree-btn::before {
+.link-button::before {
     content: '';
     position: absolute;
     top: 0;
@@ -183,7 +182,7 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.linktree-btn:hover {
+.link-button:hover {
     transform: translateY(-4px);
     box-shadow: 
         0 12px 24px rgba(0, 0, 0, 0.15),
@@ -192,18 +191,18 @@ body {
     border-color: rgba(116, 185, 255, 0.3);
 }
 
-.linktree-btn:hover::before {
+.link-button:hover::before {
     opacity: 1;
 }
 
-.linktree-btn:hover span,
-.linktree-btn:hover i {
+.link-button:hover span,
+.link-button:hover i {
     color: #ffffff;
     position: relative;
     z-index: 1;
 }
 
-.linktree-btn i {
+.link-button i {
     font-size: 20px;
     min-width: 24px;
     transition: all 0.3s ease;
@@ -280,7 +279,7 @@ body {
         font-size: 20px;
     }
     
-    .linktree-btn {
+    .link-button {
         padding: 18px 24px;
         font-size: 15px;
         border-radius: 14px;
