@@ -10,15 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Builder CSS only - Template CSS tidak di-load di sini -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Builder CSS Only - Template CSS tidak di-load di sini -->
+    <link rel="stylesheet" href="./style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1><i class="fas fa-tree"></i> Linktree Builder <span class="premium-badge">PREMIUM</span></h1>
-            <p class="subtitle">Buat halaman linktree profesional dengan GUI premium. Tanpa kode, langsung deploy!</p>
+            <p class="subtitle">Buat halaman linktree profesional dengan GUI premium. 100% Static - Tanpa backend!</p>
         </header>
 
         <div class="app-container">
@@ -35,12 +35,13 @@
                         <div class="photo-option">
                             <div class="option-header">
                                 <span class="option-label">Via URL</span>
-                                <div class="option-toggle" onclick="togglePhotoOption('url')">
+                                <div class="option-toggle active" data-option="url">
                                     <div class="toggle-dot"></div>
                                 </div>
                             </div>
                             <div class="photo-input url-input active">
-                                <input type="text" id="img-url" placeholder="https://example.com/foto.jpg" value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop">
+                                <input type="text" id="img-url" placeholder="https://example.com/foto.jpg" 
+                                       value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop">
                                 <div class="input-hint">Gunakan URL gambar persegi (1:1) untuk hasil terbaik</div>
                             </div>
                         </div>
@@ -49,7 +50,7 @@
                         <div class="photo-option">
                             <div class="option-header">
                                 <span class="option-label">Upload File</span>
-                                <div class="option-toggle" onclick="togglePhotoOption('upload')">
+                                <div class="option-toggle" data-option="upload">
                                     <div class="toggle-dot"></div>
                                 </div>
                             </div>
@@ -57,15 +58,12 @@
                                 <input type="file" id="img-upload" accept="image/*">
                                 <div class="upload-preview" id="upload-preview">
                                     <i class="fas fa-cloud-upload-alt"></i>
-                                    <span>Klik untuk memilih foto</span>
+                                    <span>Klik untuk memilih foto (Max 2MB)</span>
                                 </div>
-                                <div class="input-hint">Max 2MB. Gambar akan diubah ke Base64</div>
+                                <div class="input-hint">Gambar akan dikonversi ke Base64</div>
                                 <div class="upload-status" id="upload-status"></div>
                             </div>
                         </div>
-
-                        <input type="hidden" id="img-mode" value="url">
-                        <input type="hidden" id="img-base64" value="">
                     </div>
 
                     <div class="form-group">
@@ -81,7 +79,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-hashtag"></i> Media Sosial</label>
                         <div class="dynamic-container" id="medsos-container">
-                            <!-- Dynamic items will be added here -->
+                            <!-- Dynamic items akan ditambahkan via JS -->
                         </div>
                         <button type="button" id="add-medsos" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Media Sosial</button>
                     </div>
@@ -89,7 +87,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-link"></i> Custom Links</label>
                         <div class="dynamic-container" id="links-container">
-                            <!-- Dynamic items will be added here -->
+                            <!-- Dynamic items akan ditambahkan via JS -->
                         </div>
                         <button type="button" id="add-link" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Link</button>
                     </div>
@@ -139,9 +137,20 @@
             <div class="preview-section">
                 <div class="preview-header">
                     <h2><i class="fas fa-desktop"></i> Live Preview</h2>
-                    <div class="preview-actions">
-                        <button id="copy-btn" class="btn-success" disabled><i class="fas fa-copy"></i> Copy HTML</button>
-                        <button id="download-btn" class="btn-success" disabled><i class="fas fa-download"></i> Download HTML</button>
+                    <div class="preview-controls">
+                        <div class="preview-mode">
+                            <label>Preview Mode:</label>
+                            <select id="preview-mode">
+                                <option value="auto">Auto (Responsive)</option>
+                                <option value="desktop">Desktop (100%)</option>
+                                <option value="tablet">Tablet (768px)</option>
+                                <option value="mobile">Mobile (375px)</option>
+                            </select>
+                        </div>
+                        <div class="preview-actions">
+                            <button id="copy-btn" class="btn-success" disabled><i class="fas fa-copy"></i> Copy HTML</button>
+                            <button id="download-btn" class="btn-success" disabled><i class="fas fa-download"></i> Download</button>
+                        </div>
                     </div>
                 </div>
 
@@ -150,6 +159,7 @@
                         <div class="iframe-placeholder" id="iframe-placeholder">
                             <i class="fas fa-tree"></i>
                             <p>Preview akan muncul di sini setelah mengisi form</p>
+                            <small>Tekan "Preview & Generate HTML" untuk mulai</small>
                         </div>
                         <iframe id="preview-frame" srcdoc=""></iframe>
                     </div>
@@ -168,7 +178,8 @@
                             <div class="deploy-buttons">
                                 <a href="https://vercel.com" target="_blank" class="deploy-btn vercel">Vercel</a>
                                 <a href="https://netlify.com" target="_blank" class="deploy-btn netlify">Netlify</a>
-                                <a href="https://github.com" target="_blank" class="deploy-btn github">GitHub Pages</a>
+                                <a href="https://replit.com" target="_blank" class="deploy-btn replit">Replit</a>
+                                <a href="https://pages.github.com" target="_blank" class="deploy-btn github">GitHub Pages</a>
                             </div>
                         </div>
                     </div>
@@ -178,40 +189,14 @@
 
         <footer class="footer">
             <p>Linktree Builder Premium &copy; 2024 - Dibuat dengan <i class="fas fa-heart"></i> menggunakan Vanilla JS</p>
-            <p class="footer-note">No Backend | No Database | 100% Client Side</p>
+            <p class="footer-note">100% Static | No Backend | No Database | Client Side Only</p>
         </footer>
     </div>
 
     <!-- Scripts -->
-    <script>
-        // Global variable untuk menyimpan generated HTML
-        window.generatedHTML = '';
-        
-        // Fungsi toggle untuk foto profil
-        function togglePhotoOption(option) {
-            const urlOption = document.querySelector('.url-input');
-            const uploadOption = document.querySelector('.upload-input');
-            const urlToggle = document.querySelector('.photo-option:nth-child(1) .toggle-dot');
-            const uploadToggle = document.querySelector('.photo-option:nth-child(2) .toggle-dot');
-            
-            if (option === 'url') {
-                urlOption.classList.add('active');
-                uploadOption.classList.remove('active');
-                urlToggle.style.transform = 'translateX(0)';
-                uploadToggle.style.transform = 'translateX(0)';
-                document.getElementById('img-mode').value = 'url';
-            } else {
-                urlOption.classList.remove('active');
-                uploadOption.classList.add('active');
-                urlToggle.style.transform = 'translateX(20px)';
-                uploadToggle.style.transform = 'translateX(20px)';
-                document.getElementById('img-mode').value = 'upload';
-            }
-        }
-    </script>
-    <!-- Linktree Builder JS -->
+    <!-- Linktree Builder Library -->
     <script src="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/script.js"></script>
     <!-- Custom JS -->
-    <script src="main.js"></script>
+    <script src="./main.js"></script>
 </body>
 </html>
