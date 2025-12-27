@@ -10,9 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Linktree Builder Library -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/style.css">
-    <!-- Custom CSS -->
+    <!-- Builder CSS only - Template CSS tidak di-load di sini -->
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
 </head>
@@ -29,43 +27,61 @@
                 <div class="form-section">
                     <h2><i class="fas fa-cog"></i> Konfigurasi Profil</h2>
                     
+                    <!-- Foto Profil Options -->
                     <div class="form-group">
-                        <label for="img"><i class="fas fa-image"></i> Foto Profil (URL)</label>
-                        <input type="text" id="img" placeholder="https://example.com/foto.jpg">
-                        <div class="input-hint">Gunakan URL gambar persegi (1:1) untuk hasil terbaik</div>
+                        <label><i class="fas fa-image"></i> Foto Profil</label>
+                        
+                        <!-- Option 1: URL -->
+                        <div class="photo-option">
+                            <div class="option-header">
+                                <span class="option-label">Via URL</span>
+                                <div class="option-toggle" onclick="togglePhotoOption('url')">
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <div class="photo-input url-input active">
+                                <input type="text" id="img-url" placeholder="https://example.com/foto.jpg" value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop">
+                                <div class="input-hint">Gunakan URL gambar persegi (1:1) untuk hasil terbaik</div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Upload -->
+                        <div class="photo-option">
+                            <div class="option-header">
+                                <span class="option-label">Upload File</span>
+                                <div class="option-toggle" onclick="togglePhotoOption('upload')">
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <div class="photo-input upload-input">
+                                <input type="file" id="img-upload" accept="image/*">
+                                <div class="upload-preview" id="upload-preview">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Klik untuk memilih foto</span>
+                                </div>
+                                <div class="input-hint">Max 2MB. Gambar akan diubah ke Base64</div>
+                                <div class="upload-status" id="upload-status"></div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="img-mode" value="url">
+                        <input type="hidden" id="img-base64" value="">
                     </div>
 
                     <div class="form-group">
                         <label for="nama"><i class="fas fa-user"></i> Nama</label>
-                        <input type="text" id="nama" placeholder="Nama atau Brand Anda">
+                        <input type="text" id="nama" placeholder="Nama atau Brand Anda" value="John Doe">
                     </div>
 
                     <div class="form-group">
                         <label for="deskripsi"><i class="fas fa-file-alt"></i> Deskripsi / Bio</label>
-                        <textarea id="deskripsi" placeholder="Deskripsi singkat tentang Anda..." rows="3"></textarea>
+                        <textarea id="deskripsi" placeholder="Deskripsi singkat tentang Anda..." rows="3">Digital Creator | Web Developer | Tech Enthusiast</textarea>
                     </div>
 
                     <div class="form-group">
                         <label><i class="fas fa-hashtag"></i> Media Sosial</label>
                         <div class="dynamic-container" id="medsos-container">
-                            <div class="dynamic-item">
-                                <select class="platform-select">
-                                    <option value="">Pilih Platform</option>
-                                    <option value="youtube.com">YouTube</option>
-                                    <option value="instagram.com">Instagram</option>
-                                    <option value="github.com">GitHub</option>
-                                    <option value="linkedin.com">LinkedIn</option>
-                                    <option value="twitter.com">Twitter / X</option>
-                                    <option value="facebook.com">Facebook</option>
-                                    <option value="t.me">Telegram</option>
-                                    <option value="discord.com">Discord</option>
-                                    <option value="spotify.com">Spotify</option>
-                                    <option value="whatsapp">WhatsApp</option>
-                                    <option value="tiktok.com">TikTok</option>
-                                </select>
-                                <input type="text" class="url-input" placeholder="URL lengkap (https://...)">
-                                <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
-                            </div>
+                            <!-- Dynamic items will be added here -->
                         </div>
                         <button type="button" id="add-medsos" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Media Sosial</button>
                     </div>
@@ -73,18 +89,14 @@
                     <div class="form-group">
                         <label><i class="fas fa-link"></i> Custom Links</label>
                         <div class="dynamic-container" id="links-container">
-                            <div class="dynamic-item">
-                                <input type="text" class="link-text" placeholder="Teks Link">
-                                <input type="text" class="link-url" placeholder="URL tujuan">
-                                <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
-                            </div>
+                            <!-- Dynamic items will be added here -->
                         </div>
                         <button type="button" id="add-link" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Link</button>
                     </div>
 
                     <div class="form-group">
                         <label for="footer"><i class="fas fa-copyright"></i> Footer Text</label>
-                        <input type="text" id="footer" placeholder="© 2024 Your Brand">
+                        <input type="text" id="footer" placeholder="© 2024 Your Brand" value="© 2024 John Doe. All rights reserved.">
                     </div>
 
                     <div class="form-group">
@@ -170,6 +182,33 @@
         </footer>
     </div>
 
+    <!-- Scripts -->
+    <script>
+        // Global variable untuk menyimpan generated HTML
+        window.generatedHTML = '';
+        
+        // Fungsi toggle untuk foto profil
+        function togglePhotoOption(option) {
+            const urlOption = document.querySelector('.url-input');
+            const uploadOption = document.querySelector('.upload-input');
+            const urlToggle = document.querySelector('.photo-option:nth-child(1) .toggle-dot');
+            const uploadToggle = document.querySelector('.photo-option:nth-child(2) .toggle-dot');
+            
+            if (option === 'url') {
+                urlOption.classList.add('active');
+                uploadOption.classList.remove('active');
+                urlToggle.style.transform = 'translateX(0)';
+                uploadToggle.style.transform = 'translateX(0)';
+                document.getElementById('img-mode').value = 'url';
+            } else {
+                urlOption.classList.remove('active');
+                uploadOption.classList.add('active');
+                urlToggle.style.transform = 'translateX(20px)';
+                uploadToggle.style.transform = 'translateX(20px)';
+                document.getElementById('img-mode').value = 'upload';
+            }
+        }
+    </script>
     <!-- Linktree Builder JS -->
     <script src="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/script.js"></script>
     <!-- Custom JS -->
