@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linktree Preview | PixelLink Builder</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Linktree Builder CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/style.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        .preview-page {
+            min-height: 100vh;
+            background-color: #050510;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-header {
+            padding: 1rem;
+            background-color: rgba(10, 10, 26, 0.9);
+            border-bottom: 2px solid var(--pixel-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .preview-back {
+            color: var(--pixel-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .linktree-preview {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="preview-page">
+    <div class="preview-header">
+        <a href="index.html" class="preview-back">
+            <i class="fas fa-arrow-left"></i>
+            Back to Builder
+        </a>
+        <h1 style="font-size: 1rem; color: var(--pixel-primary);">LINKTREE PREVIEW</h1>
+    </div>
+    
+    <div class="preview-container">
+        <div class="linktree-preview" id="linktree-preview">
+            <!-- Linktree will be rendered here -->
+            <div class="preview-placeholder">
+                <i class="fas fa-cube"></i>
+                <h3>No Linktree Data</h3>
+                <p>Go back to the builder to create your Linktree</p>
+                <a href="index.html" class="btn btn-primary" style="margin-top: 1rem;">
+                    Open Builder
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/script.js"></script>
+    <script src="js/preview.js"></script>
+</body>
+</html>
