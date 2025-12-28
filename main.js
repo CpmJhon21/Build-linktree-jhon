@@ -145,15 +145,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize dynamic fields
     function initializeDynamicFields() {
-        // Add media sosial field
-        elements.addMedsosBtn.addEventListener('click', function() {
-            addMedsosField();
+    // ... kode sebelumnya ...
+    
+    // Force reflow untuk menghindari rendering issues
+    setTimeout(() => {
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.style.opacity = '1';
+            option.style.transform = 'translateY(0)';
         });
-
-        // Add custom link field
-        elements.addLinkBtn.addEventListener('click', function() {
-            addLinkField();
-        });
+        
+        // Reset semua containers
+        elements.medsosContainer.style.opacity = '1';
+        elements.linksContainer.style.opacity = '1';
+    }, 100);
+}
 
         // Template selector
         document.querySelectorAll('.template-option').forEach(option => {
