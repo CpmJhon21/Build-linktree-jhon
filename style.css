@@ -12,11 +12,14 @@ body {
     min-height: 100vh;
     padding: 20px;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 .container {
     max-width: 1600px;
     margin: 0 auto;
+    position: relative;
+    overflow: visible;
 }
 
 /* Header */
@@ -29,6 +32,8 @@ body {
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 2;
 }
 
 .header h1 {
@@ -68,6 +73,8 @@ body {
     grid-template-columns: 1fr 1.5fr;
     gap: 30px;
     margin-bottom: 40px;
+    position: relative;
+    overflow: visible;
 }
 
 @media (max-width: 1200px) {
@@ -84,6 +91,9 @@ body {
     padding: 30px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
 }
 
 .form-section h2 {
@@ -97,6 +107,7 @@ body {
 
 .form-group {
     margin-bottom: 25px;
+    position: relative;
 }
 
 .form-group label {
@@ -141,6 +152,7 @@ textarea {
 /* Dynamic Items */
 .dynamic-container {
     margin-bottom: 15px;
+    position: relative;
 }
 
 .dynamic-item {
@@ -149,6 +161,7 @@ textarea {
     gap: 10px;
     margin-bottom: 10px;
     align-items: center;
+    position: relative;
 }
 
 .btn-remove {
@@ -171,18 +184,15 @@ textarea {
 }
 
 /* Template Selector */
-/* PERBAIKAN: Fix template selector positioning */
 .template-selector {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
     margin-top: 10px;
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
-    overflow: visible; /* Pastikan ini */
+    position: relative;
+    z-index: 1;
 }
 
-/* PERBAIKAN: Fix template option styling */
 .template-option {
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -191,52 +201,51 @@ textarea {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
+    position: relative;
+    z-index: 1;
 }
 
-/* PERBAIKAN: Fix active template */
 .template-option.active {
     border-color: #00dbde;
     background: rgba(0, 219, 222, 0.1);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 219, 222, 0.3);
-    z-index: 2; /* Lebih tinggi saat aktif */
+    z-index: 2;
 }
 
-/* PERBAIKAN: Fix hover effect */
 .template-option:hover {
     transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
-    z-index: 2; /* Lebih tinggi saat hover */
+    z-index: 2;
 }
 
-/* PERBAIKAN: Fix template preview colors */
+.template-preview {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
 .template-preview.pixel {
     background: linear-gradient(45deg, #2b2b2b, #4a4a4a);
     border: 3px solid #00ff88;
-    position: relative;
-    overflow: hidden; /* Tambahkan ini */
 }
 
 .template-preview.pixel::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(0deg, 
-        transparent, 
-        transparent 2px, 
-        rgba(0, 255, 136, 0.2) 2px, 
-        rgba(0, 255, 136, 0.2) 4px);
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00ff88 2px, #00ff88 4px);
     opacity: 0.3;
 }
 
 .template-preview.minimal {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(45deg, #ffffff, #f0f0f0);
     border: 2px solid #ddd;
 }
 
@@ -246,62 +255,7 @@ textarea {
     box-shadow: 0 0 15px rgba(0, 219, 222, 0.5);
 }
 
-/* PERBAIKAN: Fix form container overflow */
-.sidebar {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    border-radius: 24px;
-    padding: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    position: relative; /* Tambahkan ini */
-    overflow: hidden; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
-}
-
-/* PERBAIKAN: Fix dynamic items container */
-.dynamic-container {
-    margin-bottom: 15px;
-    position: relative; /* Tambahkan ini */
-    overflow: visible; /* Tambahkan ini */
-}
-
-/* PERBAIKAN: Fix dynamic items */
-.dynamic-item {
-    display: grid;
-    grid-template-columns: 1fr 2fr auto;
-    gap: 10px;
-    margin-bottom: 10px;
-    align-items: center;
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
-}
-
-/* PERBAIKAN: Fix app container overflow */
-.app-container {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 30px;
-    margin-bottom: 40px;
-    position: relative; /* Tambahkan ini */
-    overflow: visible; /* Pastikan ini */
-}
-
-@media (max-width: 1200px) {
-    .app-container {
-        grid-template-columns: 1fr;
-        overflow: visible; /* Tambahkan ini */
-    }
-}
-
-/* PERBAIKAN: Clear floating elements */
-.form-group::after {
-    content: '';
-    display: table;
-    clear: both;
-}
-
-/* PERBAIKAN: Fix button container */
+/* Buttons */
 .btn-primary, .btn-secondary, .btn-success {
     padding: 15px 25px;
     border: none;
@@ -315,30 +269,64 @@ textarea {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
+    position: relative;
+    z-index: 1;
 }
 
-/* PERBAIKAN: Ensure buttons don't overlap */
+.btn-primary {
+    background: linear-gradient(90deg, #00dbde, #fc00ff);
+    color: white;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 219, 222, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: linear-gradient(90deg, #00b09b, #96c93d);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 176, 155, 0.3);
+}
+
+.btn-success:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .form-actions {
     display: flex;
     gap: 15px;
     margin-top: 30px;
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
-    clear: both; /* Tambahkan ini */
+    position: relative;
 }
 
-/* PERBAIKAN: Fix instructions box */
+/* Instructions */
 .instructions {
     background: rgba(0, 219, 222, 0.1);
     border-radius: 12px;
     padding: 20px;
     margin-top: 30px;
     border: 1px solid rgba(0, 219, 222, 0.3);
-    position: relative; /* Tambahkan ini */
-    z-index: 1; /* Tambahkan ini */
-    clear: both; /* Tambahkan ini */
+    position: relative;
 }
 
 .instructions h3 {
@@ -364,6 +352,8 @@ textarea {
     padding: 30px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
 }
 
 .preview-header {
@@ -456,6 +446,7 @@ textarea {
     transform: translateY(-10px);
     transition: all 0.3s ease;
     pointer-events: none;
+    z-index: 10;
 }
 
 .copy-overlay.show {
@@ -537,6 +528,8 @@ textarea {
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: 40px;
+    position: relative;
+    z-index: 2;
 }
 
 .footer-note {
@@ -606,4 +599,30 @@ textarea {
 
 .app-container {
     animation: fadeIn 0.5s ease-out;
+}
+
+/* Fix floating elements */
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Fix background elements */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    z-index: -1;
+}
+
+/* Fix button positioning */
+button {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
 }

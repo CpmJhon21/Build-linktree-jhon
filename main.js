@@ -1,5 +1,7 @@
 // Linktree Builder Premium - Vanilla JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Linktree Builder Premium loaded');
+    
     // DOM Elements
     const elements = {
         img: document.getElementById('img'),
@@ -145,41 +147,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize dynamic fields
     function initializeDynamicFields() {
-    // ... kode sebelumnya ...
-    
-    // Force reflow untuk menghindari rendering issues
-    setTimeout(() => {
-        document.querySelectorAll('.template-option').forEach(option => {
-            option.style.opacity = '1';
-            option.style.transform = 'translateY(0)';
-        });
+        console.log('Initializing dynamic fields...');
         
-        // Reset semua containers
-        elements.medsosContainer.style.opacity = '1';
-        elements.linksContainer.style.opacity = '1';
-    }, 100);
-}
+        // Add media sosial field
+        elements.addMedsosBtn.addEventListener('click', function() {
+            console.log('Adding new social media field');
+            addMedsosField();
+        });
+
+        // Add custom link field
+        elements.addLinkBtn.addEventListener('click', function() {
+            console.log('Adding new link field');
+            addLinkField();
+        });
 
         // Template selector
         document.querySelectorAll('.template-option').forEach(option => {
             option.addEventListener('click', function() {
+                console.log('Template selected:', this.dataset.template);
                 document.querySelectorAll('.template-option').forEach(opt => {
                     opt.classList.remove('active');
                 });
                 this.classList.add('active');
                 elements.template.value = this.dataset.template;
+                
+                // Update preview if already generated
+                if (elements.previewFrame.style.display === 'block') {
+                    updatePreview();
+                }
             });
         });
 
         // Set default values for demo
-        setDefaultValues();
+        setTimeout(() => {
+            setDefaultValues();
+        }, 100);
+        
+        console.log('Dynamic fields initialized');
     }
 
     function addMedsosField(platform = '', url = '') {
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
-            <select class="platform-select">
+            <select class="platform-select" autocomplete="off">
                 <option value="">Pilih Platform</option>
                 <option value="youtube.com">YouTube</option>
                 <option value="instagram.com">Instagram</option>
@@ -193,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <option value="whatsapp">WhatsApp</option>
                 <option value="tiktok.com">TikTok</option>
             </select>
-            <input type="text" class="url-input" placeholder="URL lengkap (https://...)" value="${url}">
+            <input type="text" class="url-input" placeholder="URL lengkap (https://...)" value="${url}" autocomplete="off">
             <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
         `;
         
@@ -206,16 +217,40 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add remove functionality
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
+            console.log('Removing social media field');
             div.remove();
+            
+            // Update preview if already generated
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
         });
+        
+        // Add input listeners for live update
+        const urlInput = div.querySelector('.url-input');
+        const platformSelect = div.querySelector('.platform-select');
+        
+        urlInput.addEventListener('input', function() {
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
+        });
+        
+        platformSelect.addEventListener('change', function() {
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
+        });
+        
+        return div;
     }
 
     function addLinkField(text = '', url = '') {
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
-            <input type="text" class="link-text" placeholder="Teks Link" value="${text}">
-            <input type="text" class="link-url" placeholder="URL tujuan" value="${url}">
+            <input type="text" class="link-text" placeholder="Teks Link" value="${text}" autocomplete="off">
+            <input type="text" class="link-url" placeholder="URL tujuan" value="${url}" autocomplete="off">
             <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
         `;
         
@@ -224,15 +259,45 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add remove functionality
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
+            console.log('Removing link field');
             div.remove();
+            
+            // Update preview if already generated
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
         });
+        
+        // Add input listeners for live update
+        const textInput = div.querySelector('.link-text');
+        const urlInput = div.querySelector('.link-url');
+        
+        textInput.addEventListener('input', function() {
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
+        });
+        
+        urlInput.addEventListener('input', function() {
+            if (elements.previewFrame.style.display === 'block') {
+                updatePreview();
+            }
+        });
+        
+        return div;
     }
 
     function setDefaultValues() {
+        console.log('Setting default values...');
+        
         elements.img.value = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop';
         elements.nama.value = 'John Doe';
         elements.deskripsi.value = 'Digital Creator | Web Developer | Tech Enthusiast';
         elements.footer.value = '© 2024 Your Brand. All rights reserved.';
+        
+        // Clear existing fields first
+        elements.medsosContainer.innerHTML = '';
+        elements.linksContainer.innerHTML = '';
         
         // Add default social media
         addMedsosField('github.com', 'https://github.com/username');
@@ -243,23 +308,8 @@ document.addEventListener('DOMContentLoaded', function() {
         addLinkField('Portfolio', 'https://portfolio.example.com');
         addLinkField('Blog', 'https://blog.example.com');
         addLinkField('Projects', 'https://github.com/username?tab=repositories');
-    }
-
-    // Clean default values for reset
-    function setCleanDefaultValues() {
-        elements.img.value = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop';
-        elements.nama.value = 'John Doe';
-        elements.deskripsi.value = 'Digital Creator | Web Developer | Tech Enthusiast';
-        elements.footer.value = '© 2024 Your Brand. All rights reserved.';
         
-        // Add clean social media defaults
-        addMedsosField('github.com', 'https://github.com/username');
-        addMedsosField('instagram.com', 'https://instagram.com/username');
-        addMedsosField('linkedin.com', 'https://linkedin.com/in/username');
-        
-        // Add clean link defaults
-        addLinkField('Portfolio', 'https://portfolio.example.com');
-        addLinkField('Blog', 'https://blog.example.com');
+        console.log('Default values set');
     }
 
     // Collect form data
@@ -302,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             medsos: medsos,
             links: links,
             footer: elements.footer.value.trim() || '© 2024 Your Brand',
-            template: elements.template.value
+            template: elements.template.value || '1'
         };
     }
 
@@ -310,16 +360,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function generatePreviewHTML(data) {
         const template = templates[data.template] || templates['1'];
         
-        if (!template) {
-            console.error('Template not found:', data.template);
-            return '<html><body><h1>Error: Template tidak ditemukan</h1></body></html>';
-        }
-        
         // Generate social media buttons
         const medsosButtons = data.medsos.map(item => {
             const icon = autoDetectIcon(item.url);
             return `
-                <a href="${item.url}" target="_blank" class="linktree-btn medsos-btn">
+                <a href="${item.url}" target="_blank" class="linktree-btn medsos-btn" rel="noopener noreferrer">
                     <i class="fab ${icon}"></i>
                 </a>
             `;
@@ -328,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Generate custom links
         const customLinks = data.links.map(item => {
             return `
-                <a href="${item.url}" target="_blank" class="linktree-btn custom-link">
+                <a href="${item.url}" target="_blank" class="linktree-btn custom-link" rel="noopener noreferrer">
                     <i class="fas ${item.icon}"></i>
                     ${item.text}
                 </a>
@@ -438,6 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         justify-content: center;
                         gap: 12px;
                         transition: all 0.3s ease;
+                        cursor: pointer;
                     }
                     
                     .custom-link i {
@@ -621,8 +667,24 @@ document.addEventListener('DOMContentLoaded', function() {
 </html>`;
     }
 
-    // Preview button click - PERBAIKAN
+    // Update preview function
+    function updatePreview() {
+        const data = collectFormData();
+        const previewHTML = generatePreviewHTML(data);
+        const fullHTML = generateFullHTML(data);
+        
+        // Update iframe
+        elements.previewFrame.srcdoc = previewHTML;
+        
+        // Update code output
+        elements.htmlOutput.textContent = fullHTML;
+        elements.htmlOutput.style.whiteSpace = 'pre-wrap';
+        elements.htmlOutput.style.wordBreak = 'break-word';
+    }
+
+    // Preview button click
     elements.previewBtn.addEventListener('click', function() {
+        console.log('Preview button clicked');
         const data = collectFormData();
         const previewHTML = generatePreviewHTML(data);
         const fullHTML = generateFullHTML(data);
@@ -635,8 +697,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update code output
         elements.htmlOutput.textContent = fullHTML;
         elements.htmlOutput.innerHTML = fullHTML;
-        
-        // Tambahkan styling untuk code output
         elements.htmlOutput.style.whiteSpace = 'pre-wrap';
         elements.htmlOutput.style.wordBreak = 'break-word';
         
@@ -644,8 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.copyBtn.disabled = false;
         elements.downloadBtn.disabled = false;
         
-        // Scroll ke preview
-        elements.previewFrame.scrollIntoView({ behavior: 'smooth' });
+        console.log('Preview generated successfully');
     });
 
     // Copy HTML to clipboard
@@ -658,6 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 elements.copyOverlay.classList.remove('show');
             }, 2000);
+            console.log('HTML copied to clipboard');
         }).catch(err => {
             console.error('Failed to copy: ', err);
             alert('Gagal menyalin ke clipboard. Silakan copy manual dari text area.');
@@ -680,11 +740,15 @@ document.addEventListener('DOMContentLoaded', function() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
+        console.log('HTML file downloaded:', filename);
     });
 
-    // Reset form - PERBAIKAN
+    // Reset form
     elements.resetBtn.addEventListener('click', function() {
         if (confirm('Reset semua input ke nilai default?')) {
+            console.log('Resetting form...');
+            
             // Reset semua input fields
             elements.img.value = '';
             elements.nama.value = '';
@@ -715,13 +779,24 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.copyBtn.disabled = true;
             elements.downloadBtn.disabled = true;
             
-            // Reset dengan default yang lebih clean
+            // Set default values
             setTimeout(() => {
-                setCleanDefaultValues();
+                setDefaultValues();
             }, 100);
+            
+            console.log('Form reset complete');
         }
     });
 
+    // Add input listeners for real-time updates
+    elements.img.addEventListener('input', updatePreview);
+    elements.nama.addEventListener('input', updatePreview);
+    elements.deskripsi.addEventListener('input', updatePreview);
+    elements.footer.addEventListener('input', updatePreview);
+
     // Initialize the application
+    console.log('Initializing application...');
     initializeDynamicFields();
+    
+    console.log('Application initialized successfully');
 });
