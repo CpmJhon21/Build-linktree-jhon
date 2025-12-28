@@ -1,4 +1,19 @@
 /* ==================== RESET & BASE STYLES ==================== */
+:root {
+    --primary-gradient: linear-gradient(90deg, #00dbde, #fc00ff);
+    --secondary-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    --primary-color: #00dbde;
+    --secondary-color: #fc00ff;
+    --success-color: #00b09b;
+    --error-color: #ff6b6b;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --bg-primary: rgba(255, 255, 255, 0.05);
+    --bg-secondary: rgba(0, 0, 0, 0.3);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -11,8 +26,8 @@ html {
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    color: #fff;
+    background: var(--secondary-gradient);
+    color: var(--text-primary);
     min-height: 100vh;
     padding: 20px;
     line-height: 1.6;
@@ -30,17 +45,17 @@ body {
     text-align: center;
     margin-bottom: 40px;
     padding: 30px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-primary);
     backdrop-filter: blur(10px);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 .header h1 {
     font-size: clamp(1.8rem, 4vw, 2.8rem);
     font-weight: 700;
-    background: linear-gradient(90deg, #00dbde, #fc00ff);
+    background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -68,7 +83,7 @@ body {
 
 .subtitle {
     font-size: clamp(0.9rem, 2vw, 1.1rem);
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -89,11 +104,11 @@ body {
 
 /* ==================== SIDEBAR ==================== */
 .sidebar {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-primary);
     backdrop-filter: blur(15px);
     border-radius: 24px;
     padding: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     animation: slideInLeft 0.5s ease-out;
 }
@@ -101,14 +116,14 @@ body {
 .form-section h2 {
     font-size: 1.5rem;
     margin-bottom: 25px;
-    color: #fff;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .form-section h2 i {
-    color: #00dbde;
+    color: var(--primary-color);
 }
 
 /* ==================== FORM GROUPS ==================== */
@@ -120,14 +135,14 @@ body {
     display: block;
     margin-bottom: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .form-group label i {
-    color: #00dbde;
+    color: var(--primary-color);
     width: 20px;
     text-align: center;
 }
@@ -136,9 +151,9 @@ input, textarea, select {
     width: 100%;
     padding: 15px;
     background: rgba(255, 255, 255, 0.08);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     transition: all 0.3s ease;
@@ -146,7 +161,7 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #00dbde;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 219, 222, 0.2);
     transform: translateY(-2px);
 }
@@ -169,6 +184,326 @@ textarea {
     font-style: italic;
 }
 
+/* ==================== TICKER TYPE SELECTOR ==================== */
+.ticker-type-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .ticker-type-selector {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ticker-type-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.ticker-type-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ticker-type-option input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+
+.ticker-type-option span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.ticker-type-option input[type="radio"]:checked ~ span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ==================== TICKER CONTAINERS ==================== */
+.ticker-container {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.ticker-container.active {
+    display: block;
+}
+
+/* ==================== DIGITAL CLOCK CONFIG ==================== */
+.digital-clock-config {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.digital-clock-config label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 30px;
+}
+
+.digital-clock-config input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.digital-clock-config label:hover .checkmark {
+    border-color: var(--primary-color);
+    background: rgba(0, 219, 222, 0.1);
+}
+
+.digital-clock-config input[type="checkbox"]:checked ~ .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.digital-clock-config input[type="checkbox"]:checked ~ .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.timezone-select {
+    margin-bottom: 15px;
+}
+
+.timezone-select label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.timezone-select select {
+    width: 100%;
+}
+
+/* ==================== DIGITAL CLOCK PREVIEW ==================== */
+.digital-clock-preview {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    color: var(--primary-color);
+    text-shadow: 0 0 10px rgba(0, 219, 222, 0.5);
+    letter-spacing: 2px;
+    margin-top: 10px;
+    border: 2px solid rgba(0, 219, 222, 0.3);
+    overflow: hidden;
+    position: relative;
+}
+
+.digital-clock-preview::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        transparent,
+        rgba(0, 219, 222, 0.1),
+        transparent
+    );
+    animation: shimmer 3s infinite linear;
+    z-index: 0;
+}
+
+.digital-clock-preview span {
+    position: relative;
+    z-index: 1;
+}
+
+.digital-clock-preview .colon {
+    animation: blink 1s infinite;
+}
+
+/* ==================== ANALOG CLOCK CONFIG ==================== */
+.analog-clock-config {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.analog-clock-config label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 30px;
+}
+
+.analog-clock-config input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.analog-clock-config label:hover .checkmark {
+    border-color: var(--primary-color);
+    background: rgba(0, 219, 222, 0.1);
+}
+
+.analog-clock-config input[type="checkbox"]:checked ~ .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.analog-clock-config input[type="checkbox"]:checked ~ .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.analog-timezone-select {
+    margin-bottom: 15px;
+}
+
+.analog-timezone-select label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.analog-timezone-select select {
+    width: 100%;
+}
+
+/* ==================== ANALOG CLOCK PREVIEW ==================== */
+.analog-clock-preview {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    margin-top: 10px;
+    border: 2px solid rgba(0, 219, 222, 0.3);
+    min-height: 200px;
+}
+
+.analog-clock {
+    width: 120px;
+    height: 120px;
+    border: 4px solid var(--primary-color);
+    border-radius: 50%;
+    position: relative;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 
+        0 0 20px rgba(0, 219, 222, 0.5),
+        inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.clock-face {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.clock-face::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(0, 219, 222, 0.8);
+}
+
+.hand {
+    position: absolute;
+    background: var(--primary-color);
+    transform-origin: bottom center;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 0 5px rgba(0, 219, 222, 0.5);
+}
+
+.hour-hand {
+    width: 4px;
+    height: 30px;
+    top: calc(50% - 30px);
+    left: calc(50% - 2px);
+}
+
+.minute-hand {
+    width: 3px;
+    height: 40px;
+    top: calc(50% - 40px);
+    left: calc(50% - 1.5px);
+}
+
+.second-hand {
+    width: 2px;
+    height: 45px;
+    top: calc(50% - 45px);
+    left: calc(50% - 1px);
+    background: var(--error-color);
+    box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
 /* ==================== DYNAMIC ITEMS ==================== */
 .dynamic-container {
     margin-bottom: 15px;
@@ -179,13 +514,13 @@ textarea {
 
 .dynamic-item {
     display: grid;
-    grid-template-columns: 1fr 2fr auto auto;
+    grid-template-columns: 1fr 2fr auto;
     gap: 10px;
     align-items: center;
     padding: 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
@@ -245,8 +580,8 @@ textarea {
 }
 
 .checkbox-input:checked + .checkbox-custom {
-    background: #00dbde;
-    border-color: #00dbde;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     box-shadow: 0 0 10px rgba(0, 219, 222, 0.5);
 }
 
@@ -258,7 +593,7 @@ textarea {
 }
 
 .checkbox-custom:hover {
-    border-color: #00dbde;
+    border-color: var(--primary-color);
     transform: scale(1.1);
 }
 
@@ -266,7 +601,7 @@ textarea {
 .btn-remove {
     background: rgba(255, 50, 50, 0.2);
     border: 1px solid rgba(255, 50, 50, 0.4);
-    color: #ff6b6b;
+    color: var(--error-color);
     width: 40px;
     height: 40px;
     border-radius: 8px;
@@ -301,7 +636,7 @@ textarea {
 
 .template-option {
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     padding: 15px;
     text-align: center;
@@ -334,7 +669,7 @@ textarea {
 }
 
 .template-option.active {
-    border-color: #00dbde;
+    border-color: var(--primary-color);
     background: rgba(0, 219, 222, 0.1);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 219, 222, 0.3);
@@ -366,13 +701,13 @@ textarea {
 
 .template-preview.neon {
     background: linear-gradient(45deg, #0f0c29, #302b63);
-    border: 2px solid #00dbde;
+    border: 2px solid var(--primary-color);
     box-shadow: inset 0 0 15px rgba(0, 219, 222, 0.5);
 }
 
 .template-option span {
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
     display: block;
     margin-top: 5px;
     font-size: 0.9rem;
@@ -412,7 +747,7 @@ textarea {
 }
 
 .btn-primary {
-    background: linear-gradient(90deg, #00dbde, #fc00ff);
+    background: var(--primary-gradient);
     color: white;
     flex: 1;
 }
@@ -424,8 +759,8 @@ textarea {
 
 .btn-secondary {
     background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -435,7 +770,7 @@ textarea {
 }
 
 .btn-success {
-    background: linear-gradient(90deg, #00b09b, #96c93d);
+    background: linear-gradient(90deg, var(--success-color), #96c93d);
     color: white;
 }
 
@@ -476,7 +811,7 @@ textarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #00dbde;
+    color: var(--primary-color);
 }
 
 .instructions ol {
@@ -485,26 +820,26 @@ textarea {
 
 .instructions li {
     margin-bottom: 8px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     transition: all 0.3s ease;
 }
 
 .instructions li:hover {
-    color: #fff;
+    color: var(--text-primary);
     transform: translateX(5px);
 }
 
 .instructions li::marker {
-    color: #00dbde;
+    color: var(--primary-color);
 }
 
 /* ==================== PREVIEW SECTION ==================== */
 .preview-section {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-primary);
     backdrop-filter: blur(15px);
     border-radius: 24px;
     padding: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     animation: slideInRight 0.5s ease-out;
 }
@@ -530,11 +865,11 @@ textarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .preview-header h2 i {
-    color: #00dbde;
+    color: var(--primary-color);
 }
 
 .preview-actions {
@@ -551,12 +886,12 @@ textarea {
 /* ==================== IFRAME CONTAINER ==================== */
 .iframe-container {
     position: relative;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-secondary);
     border-radius: 12px;
     overflow: hidden;
     height: 500px;
     margin-bottom: 25px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
 }
 
 #preview-frame {
@@ -564,7 +899,7 @@ textarea {
     height: 100%;
     border: none;
     background: white;
-    display: block;
+    display: none;
 }
 
 .iframe-placeholder {
@@ -588,7 +923,7 @@ textarea {
 .iframe-placeholder i {
     font-size: 4rem;
     margin-bottom: 20px;
-    color: #00dbde;
+    color: var(--primary-color);
     animation: bounce 2s infinite;
 }
 
@@ -599,7 +934,7 @@ textarea {
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 25px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
 }
 
 #html-output {
@@ -620,7 +955,7 @@ textarea {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: linear-gradient(90deg, #00dbde, #00b09b);
+    background: var(--primary-gradient);
     color: white;
     padding: 10px 20px;
     border-radius: 8px;
@@ -642,10 +977,10 @@ textarea {
 
 /* ==================== DEPLOY INFO ==================== */
 .deploy-info {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-primary);
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     animation: fadeIn 0.8s ease-out;
 }
 
@@ -654,18 +989,18 @@ textarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #00dbde;
+    color: var(--primary-color);
 }
 
 .deploy-info p {
     margin-bottom: 15px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     line-height: 1.6;
 }
 
 .deploy-info code {
     background: rgba(0, 219, 222, 0.2);
-    color: #00dbde;
+    color: var(--primary-color);
     padding: 4px 8px;
     border-radius: 4px;
     font-family: 'Courier New', Courier, monospace;
@@ -748,21 +1083,21 @@ textarea {
 .footer {
     text-align: center;
     padding: 30px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-primary);
     backdrop-filter: blur(10px);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     margin-top: 40px;
     animation: fadeIn 0.8s ease-out;
 }
 
 .footer p {
     margin-bottom: 10px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
 }
 
 .footer i {
-    color: #ff6b6b;
+    color: var(--error-color);
     animation: heartbeat 1.5s infinite;
 }
 
@@ -837,6 +1172,21 @@ textarea {
     }
 }
 
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes tick {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* ==================== SCROLLBAR STYLING ==================== */
 ::-webkit-scrollbar {
     width: 10px;
@@ -849,7 +1199,7 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #00dbde, #fc00ff);
+    background: var(--primary-gradient);
     border-radius: 5px;
     transition: all 0.3s ease;
 }
@@ -875,7 +1225,7 @@ textarea {
     width: 20px;
     height: 20px;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    border-top-color: #00dbde;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
 }
@@ -886,7 +1236,7 @@ textarea {
 
 /* ==================== VALIDATION STYLES ==================== */
 .input-error {
-    border-color: #ff6b6b !important;
+    border-color: var(--error-color) !important;
     box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2) !important;
     animation: shake 0.5s ease;
 }
@@ -897,7 +1247,7 @@ textarea {
 }
 
 .error-message {
-    color: #ff6b6b;
+    color: var(--error-color);
     font-size: 0.85rem;
     margin-top: 5px;
     display: flex;
@@ -911,37 +1261,28 @@ textarea {
     75% { transform: translateX(5px); }
 }
 
-/* ==================== TOOLTIP ==================== */
-.tooltip {
-    position: relative;
-    display: inline-block;
-}
-
-.tooltip .tooltip-text {
-    visibility: hidden;
-    width: 200px;
-    background-color: rgba(0, 0, 0, 0.9);
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 10px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    font-size: 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltip:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-}
-
 /* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+    .digital-clock-config,
+    .analog-clock-config {
+        grid-template-columns: 1fr;
+    }
+    
+    .digital-clock-preview {
+        font-size: 1.5rem;
+        padding: 15px;
+    }
+    
+    .analog-clock {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .hour-hand { height: 25px; top: calc(50% - 25px); }
+    .minute-hand { height: 35px; top: calc(50% - 35px); }
+    .second-hand { height: 40px; top: calc(50% - 40px); }
+}
+
 @media (max-width: 480px) {
     body {
         padding: 10px;
@@ -966,31 +1307,25 @@ textarea {
     .deploy-btn {
         width: 100%;
     }
-}
-
-/* ==================== PRINT STYLES ==================== */
-@media print {
-    body {
-        background: white !important;
-        color: black !important;
+    
+    .ticker-type-selector {
+        grid-template-columns: 1fr;
     }
     
-    .sidebar, .preview-header, .preview-actions, .instructions, .deploy-info, .footer {
-        display: none !important;
+    .ticker-type-option {
+        justify-content: center;
     }
     
-    .preview-section {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
+    .digital-clock-preview {
+        font-size: 1.3rem;
     }
     
-    .iframe-container {
-        height: auto !important;
-        border: none !important;
+    .analog-clock {
+        width: 80px;
+        height: 80px;
     }
     
-    #preview-frame {
-        display: block !important;
-    }
+    .hour-hand { height: 20px; top: calc(50% - 20px); }
+    .minute-hand { height: 30px; top: calc(50% - 30px); }
+    .second-hand { height: 35px; top: calc(50% - 35px); }
 }

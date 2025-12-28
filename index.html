@@ -29,7 +29,7 @@
                 <section class="form-section">
                     <h2><i class="fas fa-cog"></i> Konfigurasi Profil</h2>
                     
-                    <!-- Banner Text (seperti ML Lobby Generator) -->
+                    <!-- Banner Text -->
                     <div class="form-group">
                         <label for="bannerText"><i class="fas fa-flag"></i> Banner Text</label>
                         <input type="text" id="bannerText" placeholder="ML Lobby Generator" autocomplete="off">
@@ -43,11 +43,115 @@
                         <small class="input-hint">Teks kecil di bawah banner utama</small>
                     </div>
 
-                    <!-- Real-time Ticker -->
+                    <!-- Ticker / Waktu -->
                     <div class="form-group">
-                        <label for="tickerText"><i class="fas fa-clock"></i> Ticker / Waktu</label>
-                        <input type="text" id="tickerText" placeholder="2 | : 13 : 22" autocomplete="off">
-                        <small class="input-hint">Format: X | : XX : XX (kosongkan jika tidak perlu)</small>
+                        <label><i class="fas fa-clock"></i> Ticker / Waktu</label>
+                        
+                        <div class="ticker-type-selector">
+                            <label class="ticker-type-option">
+                                <input type="radio" name="tickerType" value="static" checked>
+                                <span>Static Text</span>
+                            </label>
+                            <label class="ticker-type-option">
+                                <input type="radio" name="tickerType" value="digital">
+                                <span>Jam Digital</span>
+                            </label>
+                            <label class="ticker-type-option">
+                                <input type="radio" name="tickerType" value="analog">
+                                <span>Jam Analog</span>
+                            </label>
+                            <label class="ticker-type-option">
+                                <input type="radio" name="tickerType" value="none">
+                                <span>Tidak Ada</span>
+                            </label>
+                        </div>
+                        
+                        <div id="static-ticker-container" class="ticker-container active">
+                            <input type="text" id="tickerText" placeholder="2 | : 13 : 22" autocomplete="off">
+                            <small class="input-hint">Format bebas, contoh: 2 | : 13 : 22</small>
+                        </div>
+                        
+                        <div id="digital-ticker-container" class="ticker-container">
+                            <div class="digital-clock-config">
+                                <label>
+                                    <input type="checkbox" id="showSeconds" checked>
+                                    <span class="checkmark"></span>
+                                    Tampilkan Detik
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="showDate">
+                                    <span class="checkmark"></span>
+                                    Tampilkan Tanggal
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="militaryTime">
+                                    <span class="checkmark"></span>
+                                    24 Jam Format
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="blinkSeparator">
+                                    <span class="checkmark"></span>
+                                    Separator Berkedip
+                                </label>
+                            </div>
+                            <div class="timezone-select">
+                                <label>Zona Waktu:</label>
+                                <select id="timezone">
+                                    <option value="local">Local Time (Browser)</option>
+                                    <option value="Asia/Jakarta">WIB (Jakarta)</option>
+                                    <option value="Asia/Makassar">WITA (Makassar)</option>
+                                    <option value="Asia/Jayapura">WIT (Jayapura)</option>
+                                    <option value="Asia/Singapore">Singapore</option>
+                                    <option value="Asia/Tokyo">Japan</option>
+                                    <option value="Asia/Shanghai">China</option>
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">New York</option>
+                                    <option value="Europe/London">London</option>
+                                </select>
+                            </div>
+                            <div class="digital-clock-preview" id="digitalClockPreview">
+                                12:34:56
+                            </div>
+                        </div>
+                        
+                        <div id="analog-ticker-container" class="ticker-container">
+                            <div class="analog-clock-config">
+                                <label>
+                                    <input type="checkbox" id="showAnalogSeconds" checked>
+                                    <span class="checkmark"></span>
+                                    Tampilkan Jarum Detik
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="showAnalogNumbers" checked>
+                                    <span class="checkmark"></span>
+                                    Tampilkan Angka
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="smoothAnalog" checked>
+                                    <span class="checkmark"></span>
+                                    Gerakan Smooth
+                                </label>
+                            </div>
+                            <div class="analog-timezone-select">
+                                <label>Zona Waktu:</label>
+                                <select id="analogTimezone">
+                                    <option value="local">Local Time (Browser)</option>
+                                    <option value="Asia/Jakarta">WIB (Jakarta)</option>
+                                    <option value="Asia/Makassar">WITA (Makassar)</option>
+                                    <option value="Asia/Jayapura">WIT (Jayapura)</option>
+                                    <option value="UTC">UTC</option>
+                                </select>
+                            </div>
+                            <div class="analog-clock-preview" id="analogClockPreview">
+                                <div class="analog-clock">
+                                    <div class="clock-face">
+                                        <div class="hand hour-hand"></div>
+                                        <div class="hand minute-hand"></div>
+                                        <div class="hand second-hand"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Profile Image -->

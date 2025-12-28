@@ -1,6 +1,6 @@
 /**
  * Linktree Builder Premium
- * Enhanced Version with New Features - No Default Values
+ * Final Complete Version with All Features
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -37,14 +37,18 @@ document.addEventListener('DOMContentLoaded', function() {
         copyOverlay: document.getElementById('copy-overlay')
     };
     
-    // Debug: Check if elements exist
-    console.log('✅ Elements found:', Object.keys(elements).filter(key => elements[key] !== null).length);
+    // ==================== GLOBAL VARIABLES ====================
+    let digitalClockInterval = null;
+    let analogClockInterval = null;
+    let isInitializing = true;
     
     // ==================== TEMPLATES ====================
     const templates = {
         '1': {
             name: 'Pixel Modern',
             font: '"Press Start 2P", cursive',
+            primaryColor: '#00ff88',
+            secondaryColor: '#2b2b2b',
             style: `
                 body {
                     background: linear-gradient(45deg, #2b2b2b, #4a4a4a);
@@ -81,6 +85,8 @@ document.addEventListener('DOMContentLoaded', function() {
         '2': {
             name: 'Minimal Clean',
             font: '"Poppins", sans-serif',
+            primaryColor: '#667eea',
+            secondaryColor: '#ffffff',
             style: `
                 body {
                     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -120,6 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
         '3': {
             name: 'Cyber Neon',
             font: '"Poppins", sans-serif',
+            primaryColor: '#00dbde',
+            secondaryColor: '#000000',
             style: `
                 body {
                     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -159,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // ==================== DATA PERSISTENCE ====================
+    // ==================== UTILITY FUNCTIONS ====================
     function saveToLocalStorage(data) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -187,7 +195,52 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🗑️ localStorage cleared');
     }
     
-    // ==================== ICON DETECTION ====================
+    function formatURL(url, platform = '') {
+        if (!url) return '';
+        
+        url = url.trim();
+        
+        // Jika sudah ada http:// atau https://, biarkan
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+        
+        // Jika hanya username (tanpa . dan tanpa /)
+        if (!url.includes('.') && !url.includes('/') && !url.includes('@')) {
+            if (platform) {
+                // Special cases
+                if (platform === 'whatsapp') {
+                    return `https://wa.me/${url.replace(/\D/g, '')}`;
+                }
+                if (platform === 'telegram') {
+                    return `https://t.me/${url.replace('@', '')}`;
+                }
+                return `https://${platform}.com/${url}`;
+            }
+            return `https://${url}.com`;
+        }
+        
+        // Jika dimulai dengan @
+        if (url.startsWith('@')) {
+            if (platform) {
+                return `https://${platform}.com/${url.substring(1)}`;
+            }
+            return `https://instagram.com/${url.substring(1)}`;
+        }
+        
+        // Jika ada www. tapi tanpa https://
+        if (url.startsWith('www.')) {
+            return 'https://' + url;
+        }
+        
+        // Jika ada domain tapi tanpa protokol
+        if (url.includes('.') && !url.includes('://')) {
+            return 'https://' + url;
+        }
+        
+        return url;
+    }
+    
     function detectIcon(url, platform = '', text = '') {
         const str = (url + ' ' + platform + ' ' + text).toLowerCase();
         
@@ -237,73 +290,215 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'fa-link';
     }
     
-    // ==================== URL FORMATTING ====================
-    function formatURL(url, platform = '') {
-        if (!url) return '';
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        `;
         
-        url = url.trim();
+        // Add to body
+        document.body.appendChild(notification);
         
-        // Jika sudah ada http:// atau https://, biarkan
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            return url;
-        }
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
         
-        // Jika hanya username (tanpa . dan tanpa /)
-        if (!url.includes('.') && !url.includes('/') && !url.includes('@')) {
-            if (platform) {
-                // Special cases
-                if (platform === 'whatsapp') {
-                    return `https://wa.me/${url.replace(/\D/g, '')}`;
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
                 }
-                if (platform === 'telegram') {
-                    return `https://t.me/${url.replace('@', '')}`;
-                }
-                return `https://${platform}.com/${url}`;
+            }, 300);
+        }, 3000);
+    }
+    
+    // ==================== CLOCK FUNCTIONS ====================
+    function updateDigitalClockPreview() {
+        const preview = document.getElementById('digitalClockPreview');
+        if (!preview) return;
+        
+        const showSeconds = document.getElementById('showSeconds')?.checked ?? true;
+        const showDate = document.getElementById('showDate')?.checked ?? false;
+        const militaryTime = document.getElementById('militaryTime')?.checked ?? false;
+        const blinkSeparator = document.getElementById('blinkSeparator')?.checked ?? true;
+        const timezone = document.getElementById('timezone')?.value || 'local';
+        
+        let now;
+        try {
+            if (timezone === 'local') {
+                now = new Date();
+            } else {
+                now = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
             }
-            return `https://${url}.com`;
+        } catch (error) {
+            console.error('Error getting time:', error);
+            now = new Date();
         }
         
-        // Jika dimulai dengan @
-        if (url.startsWith('@')) {
-            if (platform) {
-                return `https://${platform}.com/${url.substring(1)}`;
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        // Format 12/24 jam
+        let hourDisplay;
+        if (militaryTime) {
+            hourDisplay = hours.toString().padStart(2, '0');
+        } else {
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            hourDisplay = hours.toString().padStart(2, '0');
+            hourDisplay = `${hourDisplay} ${ampm}`;
+        }
+        
+        // Bangun string waktu
+        let timeString = `${hourDisplay}<span class="${blinkSeparator ? 'colon' : ''}">:</span>${minutes}`;
+        if (showSeconds) {
+            timeString += `<span class="${blinkSeparator ? 'colon' : ''}">:</span>${seconds}`;
+        }
+        
+        // Tambah tanggal jika dipilih
+        if (showDate) {
+            const date = now.toLocaleDateString('id-ID', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            preview.innerHTML = `<div style="font-size: 0.8em; margin-bottom: 5px;">${date}</div><div>${timeString}</div>`;
+        } else {
+            preview.innerHTML = timeString;
+        }
+    }
+    
+    function updateAnalogClockPreview() {
+        const clockFace = document.querySelector('.clock-face');
+        if (!clockFace) return;
+        
+        const showSeconds = document.getElementById('showAnalogSeconds')?.checked ?? true;
+        const showNumbers = document.getElementById('showAnalogNumbers')?.checked ?? true;
+        const smooth = document.getElementById('smoothAnalog')?.checked ?? true;
+        const timezone = document.getElementById('analogTimezone')?.value || 'local';
+        
+        let now;
+        try {
+            if (timezone === 'local') {
+                now = new Date();
+            } else {
+                now = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
             }
-            return `https://instagram.com/${url.substring(1)}`; // Default to Instagram
+        } catch (error) {
+            console.error('Error getting time:', error);
+            now = new Date();
         }
         
-        // Jika ada www. tapi tanpa https://
-        if (url.startsWith('www.')) {
-            return 'https://' + url;
+        const hours = now.getHours() % 12;
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const milliseconds = smooth ? now.getMilliseconds() : 0;
+        
+        // Hitung derajat
+        const secondDegrees = ((seconds + milliseconds / 1000) * 6) - 90;
+        const minuteDegrees = ((minutes + seconds / 60) * 6) - 90;
+        const hourDegrees = ((hours + minutes / 60) * 30) - 90;
+        
+        // Update jarum jam
+        const hourHand = document.querySelector('.hour-hand');
+        const minuteHand = document.querySelector('.minute-hand');
+        const secondHand = document.querySelector('.second-hand');
+        
+        if (hourHand) hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+        if (minuteHand) minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+        if (secondHand) {
+            secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+            secondHand.style.display = showSeconds ? 'block' : 'none';
         }
         
-        // Jika ada domain tapi tanpa protokol
-        if (url.includes('.') && !url.includes('://')) {
-            return 'https://' + url;
-        }
+        // Update angka jam
+        updateClockNumbers(showNumbers);
+    }
+    
+    function updateClockNumbers(showNumbers) {
+        const clockFace = document.querySelector('.clock-face');
+        if (!clockFace) return;
         
-        return url;
+        // Hapus angka sebelumnya
+        const existingNumbers = clockFace.querySelectorAll('.clock-number');
+        existingNumbers.forEach(num => num.remove());
+        
+        if (!showNumbers) return;
+        
+        // Tambah angka 1-12
+        for (let i = 1; i <= 12; i++) {
+            const number = document.createElement('div');
+            number.className = 'clock-number';
+            number.textContent = i;
+            number.style.color = '#00dbde';
+            number.style.fontSize = '10px';
+            number.style.fontWeight = 'bold';
+            number.style.position = 'absolute';
+            number.style.transform = 'translate(-50%, -50%)';
+            
+            // Hitung posisi
+            const angle = (i * 30) * (Math.PI / 180);
+            const radius = 40;
+            const x = 50 + radius * Math.sin(angle);
+            const y = 50 - radius * Math.cos(angle);
+            
+            number.style.left = `${x}%`;
+            number.style.top = `${y}%`;
+            
+            clockFace.appendChild(number);
+        }
+    }
+    
+    function startClockIntervals() {
+        // Hentikan interval sebelumnya
+        if (digitalClockInterval) clearInterval(digitalClockInterval);
+        if (analogClockInterval) clearInterval(analogClockInterval);
+        
+        // Digital clock interval
+        digitalClockInterval = setInterval(updateDigitalClockPreview, 100);
+        
+        // Analog clock interval
+        analogClockInterval = setInterval(updateAnalogClockPreview, 50);
+    }
+    
+    function stopClockIntervals() {
+        if (digitalClockInterval) {
+            clearInterval(digitalClockInterval);
+            digitalClockInterval = null;
+        }
+        if (analogClockInterval) {
+            clearInterval(analogClockInterval);
+            analogClockInterval = null;
+        }
     }
     
     // ==================== DYNAMIC FIELDS ====================
-    
-    // Add Notice Field
     function addNoticeField(text = '') {
-        console.log('📝 Adding notice field');
-        
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
             <input type="text" class="notice-text" placeholder="Website ini GRATIS 100% dan DILARANG DIJUAL BELIKAN" value="${text || ''}">
-            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
         elements.noticeContainer.appendChild(div);
         
-        // Setup event listeners
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
             autoSave();
+            showNotification('Informasi dihapus', 'info');
         });
         
         const input = div.querySelector('.notice-text');
@@ -312,10 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
     
-    // Add Social Media with Checkbox Field
     function addMedsosCheckboxField(platform = '', text = '', url = '', checked = false) {
-        console.log('☑️ Adding social media checkbox field');
-        
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -331,11 +523,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </select>
             <input type="text" class="checkbox-text" placeholder="Nama channel/akun" value="${text || ''}">
             <input type="text" class="checkbox-url" placeholder="https://t.me/username" value="${url || ''}">
-            <label class="checkbox-label">
+            <label class="checkbox-label" title="${checked ? 'Checked' : 'Unchecked'}">
                 <input type="checkbox" class="checkbox-input" ${checked ? 'checked' : ''}>
                 <span class="checkbox-custom"></span>
             </label>
-            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
         elements.medsosCheckboxContainer.appendChild(div);
@@ -344,11 +538,11 @@ document.addEventListener('DOMContentLoaded', function() {
             div.querySelector('.platform-select').value = platform;
         }
         
-        // Setup event listeners
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
             autoSave();
+            showNotification('Media sosial dihapus', 'info');
         });
         
         const platformSelect = div.querySelector('.platform-select');
@@ -359,7 +553,21 @@ document.addEventListener('DOMContentLoaded', function() {
         platformSelect.addEventListener('change', function() {
             const platform = this.value;
             
-            // Auto-update placeholder
+            if (!textInput.value) {
+                const textMap = {
+                    'telegram': 'Telegram',
+                    'whatsapp': 'WhatsApp Channel',
+                    'tiktok': 'TikTok',
+                    'instagram': 'Instagram',
+                    'youtube': 'YouTube',
+                    'discord': 'Discord',
+                    'other': 'Lainnya'
+                };
+                if (textMap[platform]) {
+                    textInput.value = textMap[platform];
+                }
+            }
+            
             if (platform === 'whatsapp') {
                 urlInput.placeholder = 'https://whatsapp.com/channel/...';
             } else if (platform === 'telegram') {
@@ -378,10 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
     
-    // Add Social Media Field
     function addMedsosField(platform = '', url = '') {
-        console.log('➕ Adding social media field');
-        
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -403,7 +608,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <option value="snapchat">Snapchat</option>
             </select>
             <input type="text" class="url-input" placeholder="username atau URL" value="${url || ''}">
-            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
         elements.medsosContainer.appendChild(div);
@@ -412,14 +619,13 @@ document.addEventListener('DOMContentLoaded', function() {
             div.querySelector('.platform-select').value = platform;
         }
         
-        // Setup event listeners
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
             autoSave();
+            showNotification('Media sosial dihapus', 'info');
         });
         
-        // Auto-update placeholder
         const select = div.querySelector('.platform-select');
         const input = div.querySelector('.url-input');
         
@@ -441,10 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
     
-    // Add Custom Link Field
     function addLinkField(platform = '', text = '', url = '') {
-        console.log('🔗 Adding custom link field');
-        
         const div = document.createElement('div');
         div.className = 'dynamic-item';
         div.innerHTML = `
@@ -461,7 +664,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </select>
             <input type="text" class="link-text" placeholder="Nama link" value="${text || ''}">
             <input type="text" class="link-url" placeholder="https://example.com" value="${url || ''}">
-            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
         elements.linksContainer.appendChild(div);
@@ -470,14 +675,13 @@ document.addEventListener('DOMContentLoaded', function() {
             div.querySelector('.link-platform-select').value = platform;
         }
         
-        // Setup event listeners
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
             autoSave();
+            showNotification('Link dihapus', 'info');
         });
         
-        // Auto-fill text based on platform
         const platformSelect = div.querySelector('.link-platform-select');
         const textInput = div.querySelector('.link-text');
         const urlInput = div.querySelector('.link-url');
@@ -485,7 +689,6 @@ document.addEventListener('DOMContentLoaded', function() {
         platformSelect.addEventListener('change', function() {
             const platform = this.value;
             
-            // Auto-update placeholder
             if (platform === 'email') {
                 urlInput.placeholder = 'email@example.com';
             } else if (platform === 'website' || platform === 'portfolio' || platform === 'store') {
@@ -505,7 +708,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
     
-    // ==================== DATA COLLECTION ====================
+    // ==================== FORM DATA COLLECTION ====================
     function collectFormData() {
         const notices = [];
         const medsosCheckbox = [];
@@ -571,23 +774,291 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Get ticker type and data
+        const tickerType = document.querySelector('input[name="tickerType"]:checked')?.value || 'static';
+        let tickerData = {};
+        
+        if (tickerType === 'static') {
+            tickerData = {
+                type: 'static',
+                text: elements.tickerText?.value.trim() || ''
+            };
+        } else if (tickerType === 'digital') {
+            tickerData = {
+                type: 'digital',
+                showSeconds: document.getElementById('showSeconds')?.checked ?? true,
+                showDate: document.getElementById('showDate')?.checked ?? false,
+                militaryTime: document.getElementById('militaryTime')?.checked ?? false,
+                blinkSeparator: document.getElementById('blinkSeparator')?.checked ?? true,
+                timezone: document.getElementById('timezone')?.value || 'local'
+            };
+        } else if (tickerType === 'analog') {
+            tickerData = {
+                type: 'analog',
+                showSeconds: document.getElementById('showAnalogSeconds')?.checked ?? true,
+                showNumbers: document.getElementById('showAnalogNumbers')?.checked ?? true,
+                smooth: document.getElementById('smoothAnalog')?.checked ?? true,
+                timezone: document.getElementById('analogTimezone')?.value || 'local'
+            };
+        } else if (tickerType === 'none') {
+            tickerData = {
+                type: 'none'
+            };
+        }
+        
         return {
-            bannerText: elements.bannerText.value.trim(),
-            subBanner: elements.subBanner.value.trim(),
-            tickerText: elements.tickerText.value.trim(),
-            img: elements.img.value.trim(),
-            nama: elements.nama.value.trim(),
-            deskripsi: elements.deskripsi.value.trim(),
+            bannerText: elements.bannerText?.value.trim() || '',
+            subBanner: elements.subBanner?.value.trim() || '',
+            ticker: tickerData,
+            img: elements.img?.value.trim() || '',
+            nama: elements.nama?.value.trim() || '',
+            deskripsi: elements.deskripsi?.value.trim() || '',
             notices: notices,
             medsosCheckbox: medsosCheckbox,
             medsos: medsos,
             links: links,
-            footer: elements.footer.value.trim(),
-            template: elements.template.value || '1'
+            footer: elements.footer?.value.trim() || '',
+            template: elements.template?.value || '1'
         };
     }
     
+    function autoSave() {
+        if (isInitializing) return;
+        const data = collectFormData();
+        saveToLocalStorage(data);
+    }
+    
+    // ==================== TICKER TYPE HANDLING ====================
+    function setupTickerTypeSelector() {
+        const tickerTypeRadios = document.querySelectorAll('input[name="tickerType"]');
+        const staticContainer = document.getElementById('static-ticker-container');
+        const digitalContainer = document.getElementById('digital-ticker-container');
+        const analogContainer = document.getElementById('analog-ticker-container');
+        
+        tickerTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Sembunyikan semua container
+                [staticContainer, digitalContainer, analogContainer].forEach(container => {
+                    container?.classList.remove('active');
+                });
+                
+                // Tampilkan container yang dipilih
+                if (this.value === 'static') {
+                    staticContainer?.classList.add('active');
+                    stopClockIntervals();
+                } else if (this.value === 'digital') {
+                    digitalContainer?.classList.add('active');
+                    updateDigitalClockPreview();
+                    startClockIntervals();
+                } else if (this.value === 'analog') {
+                    analogContainer?.classList.add('active');
+                    updateAnalogClockPreview();
+                    startClockIntervals();
+                } else if (this.value === 'none') {
+                    stopClockIntervals();
+                }
+                
+                autoSave();
+            });
+        });
+        
+        // Event listeners untuk konfigurasi jam digital
+        const digitalConfigs = ['showSeconds', 'showDate', 'militaryTime', 'blinkSeparator', 'timezone'];
+        digitalConfigs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', function() {
+                    updateDigitalClockPreview();
+                    autoSave();
+                });
+            }
+        });
+        
+        // Event listeners untuk konfigurasi jam analog
+        const analogConfigs = ['showAnalogSeconds', 'showAnalogNumbers', 'smoothAnalog', 'analogTimezone'];
+        analogConfigs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', function() {
+                    updateAnalogClockPreview();
+                    autoSave();
+                });
+            }
+        });
+    }
+    
+    function restoreTickerConfig(savedTicker) {
+        if (!savedTicker) return;
+        
+        // Set ticker type
+        const tickerType = savedTicker.type || 'static';
+        const tickerRadio = document.querySelector(`input[name="tickerType"][value="${tickerType}"]`);
+        if (tickerRadio) {
+            tickerRadio.checked = true;
+            tickerRadio.dispatchEvent(new Event('change'));
+        }
+        
+        // Restore config based on type
+        if (tickerType === 'static') {
+            if (elements.tickerText && savedTicker.text !== undefined) {
+                elements.tickerText.value = savedTicker.text;
+            }
+        } else if (tickerType === 'digital') {
+            const configs = ['showSeconds', 'showDate', 'militaryTime', 'blinkSeparator'];
+            configs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element && savedTicker[key] !== undefined) {
+                    element.checked = savedTicker[key];
+                }
+            });
+            
+            const timezoneSelect = document.getElementById('timezone');
+            if (timezoneSelect && savedTicker.timezone) {
+                timezoneSelect.value = savedTicker.timezone;
+            }
+        } else if (tickerType === 'analog') {
+            const configs = ['showAnalogSeconds', 'showAnalogNumbers', 'smoothAnalog'];
+            configs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element && savedTicker[key] !== undefined) {
+                    element.checked = savedTicker[key];
+                }
+            });
+            
+            const timezoneSelect = document.getElementById('analogTimezone');
+            if (timezoneSelect && savedTicker.timezone) {
+                timezoneSelect.value = savedTicker.timezone;
+            }
+        }
+    }
+    
     // ==================== HTML GENERATION ====================
+    function generateDigitalClockScript(tickerConfig) {
+        return `
+        function updateDigitalClock() {
+            const clockElement = document.querySelector('.digital-clock');
+            if (!clockElement) return;
+            
+            let now;
+            try {
+                if ('${tickerConfig.timezone}' === 'local') {
+                    now = new Date();
+                } else {
+                    now = new Date(new Date().toLocaleString('en-US', { timeZone: '${tickerConfig.timezone}' }));
+                }
+            } catch (error) {
+                now = new Date();
+            }
+            
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            let hourDisplay;
+            if (${tickerConfig.militaryTime}) {
+                hourDisplay = hours.toString().padStart(2, '0');
+            } else {
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                hourDisplay = hours.toString().padStart(2, '0') + ' ' + ampm;
+            }
+            
+            let timeString = hourDisplay + '<span class="${tickerConfig.blinkSeparator ? 'colon' : ''}">:</span>' + minutes;
+            if (${tickerConfig.showSeconds}) {
+                timeString += '<span class="${tickerConfig.blinkSeparator ? 'colon' : ''}">:</span>' + seconds;
+            }
+            
+            if (${tickerConfig.showDate}) {
+                const date = now.toLocaleDateString('id-ID', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                clockElement.innerHTML = '<div style="font-size: 0.8em; margin-bottom: 5px;">' + date + '</div><div>' + timeString + '</div>';
+            } else {
+                clockElement.innerHTML = timeString;
+            }
+        }
+        
+        updateDigitalClock();
+        setInterval(updateDigitalClock, 1000);
+    `;
+    }
+    
+    function generateAnalogClockScript(tickerConfig) {
+        return `
+        function updateAnalogClock() {
+            const clockFace = document.querySelector('.clock-face');
+            if (!clockFace) return;
+            
+            let now;
+            try {
+                if ('${tickerConfig.timezone}' === 'local') {
+                    now = new Date();
+                } else {
+                    now = new Date(new Date().toLocaleString('en-US', { timeZone: '${tickerConfig.timezone}' }));
+                }
+            } catch (error) {
+                now = new Date();
+            }
+            
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = ${tickerConfig.smooth} ? now.getMilliseconds() : 0;
+            
+            const secondDegrees = ((seconds + milliseconds / 1000) * 6) - 90;
+            const minuteDegrees = ((minutes + seconds / 60) * 6) - 90;
+            const hourDegrees = ((hours + minutes / 60) * 30) - 90;
+            
+            const hourHand = document.querySelector('.hour-hand');
+            const minuteHand = document.querySelector('.minute-hand');
+            const secondHand = document.querySelector('.second-hand');
+            
+            if (hourHand) hourHand.style.transform = 'rotate(' + hourDegrees + 'deg)';
+            if (minuteHand) minuteHand.style.transform = 'rotate(' + minuteDegrees + 'deg)';
+            if (secondHand) secondHand.style.transform = 'rotate(' + secondDegrees + 'deg)';
+            
+            updateClockNumbers();
+        }
+        
+        function updateClockNumbers() {
+            const clockFace = document.querySelector('.clock-face');
+            if (!clockFace || !${tickerConfig.showNumbers}) return;
+            
+            const existingNumbers = clockFace.querySelectorAll('.clock-number');
+            existingNumbers.forEach(num => num.remove());
+            
+            for (let i = 1; i <= 12; i++) {
+                const number = document.createElement('div');
+                number.className = 'clock-number';
+                number.textContent = i;
+                number.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#00dbde';
+                number.style.fontSize = '10px';
+                number.style.fontWeight = 'bold';
+                number.style.position = 'absolute';
+                number.style.transform = 'translate(-50%, -50%)';
+                
+                const angle = (i * 30) * (Math.PI / 180);
+                const radius = 35;
+                const x = 50 + radius * Math.sin(angle);
+                const y = 50 - radius * Math.cos(angle);
+                
+                number.style.left = x + '%';
+                number.style.top = y + '%';
+                
+                clockFace.appendChild(number);
+            }
+        }
+        
+        updateClockNumbers();
+        updateAnalogClock();
+        setInterval(updateAnalogClock, ${tickerConfig.smooth ? 50 : 1000});
+    `;
+    }
+    
     function generatePreviewHTML(data) {
         const template = templates[data.template] || templates['1'];
         
@@ -600,10 +1071,114 @@ document.addEventListener('DOMContentLoaded', function() {
             bannerHTML += `<p class="banner-subtitle">${data.subBanner}</p>`;
         }
         
-        // Ticker HTML
+        // Ticker HTML berdasarkan type
         let tickerHTML = '';
-        if (data.tickerText) {
-            tickerHTML = `<div class="ticker">${data.tickerText}</div>`;
+        let clockCSS = '';
+        let clockScript = '';
+        
+        if (data.ticker && data.ticker.type !== 'none') {
+            if (data.ticker.type === 'static' && data.ticker.text) {
+                tickerHTML = `<div class="ticker">${data.ticker.text}</div>`;
+            } else if (data.ticker.type === 'digital') {
+                const clockId = 'digital-clock-' + Date.now();
+                tickerHTML = `<div id="${clockId}" class="digital-clock"></div>`;
+                clockCSS = `
+                    .digital-clock {
+                        font-family: 'Courier New', monospace;
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        text-align: center;
+                        color: ${template.primaryColor};
+                        padding: 10px;
+                        margin-bottom: 20px;
+                        background: rgba(0, 0, 0, 0.2);
+                        border-radius: 8px;
+                        display: inline-block;
+                    }
+                    
+                    .digital-clock .colon {
+                        animation: blink 1s infinite;
+                    }
+                `;
+                clockScript = generateDigitalClockScript(data.ticker);
+            } else if (data.ticker.type === 'analog') {
+                const clockId = 'analog-clock-' + Date.now();
+                tickerHTML = `
+                    <div id="${clockId}" class="analog-clock-container">
+                        <div class="analog-clock">
+                            <div class="clock-face">
+                                <div class="hand hour-hand"></div>
+                                <div class="hand minute-hand"></div>
+                                <div class="hand second-hand" style="display: ${data.ticker.showSeconds ? 'block' : 'none'}"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                clockCSS = `
+                    .analog-clock-container {
+                        display: flex;
+                        justify-content: center;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .analog-clock {
+                        width: 80px;
+                        height: 80px;
+                        border: 3px solid ${template.primaryColor};
+                        border-radius: 50%;
+                        position: relative;
+                        background: rgba(0, 0, 0, 0.3);
+                    }
+                    
+                    .clock-face {
+                        width: 100%;
+                        height: 100%;
+                        position: relative;
+                    }
+                    
+                    .clock-face::after {
+                        content: '';
+                        position: absolute;
+                        width: 8px;
+                        height: 8px;
+                        background: ${template.primaryColor};
+                        border-radius: 50%;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                    
+                    .hand {
+                        position: absolute;
+                        background: ${template.primaryColor};
+                        transform-origin: bottom center;
+                        border-radius: 2px 2px 0 0;
+                    }
+                    
+                    .hour-hand {
+                        width: 3px;
+                        height: 20px;
+                        top: calc(50% - 20px);
+                        left: calc(50% - 1.5px);
+                    }
+                    
+                    .minute-hand {
+                        width: 2px;
+                        height: 30px;
+                        top: calc(50% - 30px);
+                        left: calc(50% - 1px);
+                    }
+                    
+                    .second-hand {
+                        width: 1px;
+                        height: 35px;
+                        top: calc(50% - 35px);
+                        left: calc(50% - 0.5px);
+                        background: #ff6b6b;
+                    }
+                `;
+                clockScript = generateAnalogClockScript(data.ticker);
+            }
         }
         
         // Notice boxes HTML
@@ -673,6 +1248,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <style>
         ${template.style}
         
+        ${clockCSS}
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -727,12 +1309,14 @@ document.addEventListener('DOMContentLoaded', function() {
             object-fit: cover;
             border: 3px solid rgba(255, 255, 255, 0.2);
             margin: 0 auto 20px;
+            display: ${data.img ? 'block' : 'none'};
         }
         
         .profile-name {
             font-size: 1.5rem;
             margin-bottom: 10px;
             font-weight: 700;
+            display: ${data.nama ? 'block' : 'none'};
         }
         
         .profile-bio {
@@ -740,6 +1324,7 @@ document.addEventListener('DOMContentLoaded', function() {
             opacity: 0.9;
             margin-bottom: 30px;
             line-height: 1.6;
+            display: ${data.deskripsi ? 'block' : 'none'};
         }
         
         .notice-box {
@@ -827,6 +1412,7 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: ${data.footer ? 'block' : 'none'};
         }
         
         @keyframes fadeIn {
@@ -852,6 +1438,20 @@ document.addEventListener('DOMContentLoaded', function() {
             .ticker {
                 font-size: 1rem;
                 padding: 6px 12px;
+            }
+            
+            .analog-clock {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .hour-hand { height: 15px; top: calc(50% - 15px); }
+            .minute-hand { height: 22px; top: calc(50% - 22px); }
+            .second-hand { height: 25px; top: calc(50% - 25px); }
+            
+            .digital-clock {
+                font-size: 1rem;
+                padding: 8px;
             }
         }
     </style>
@@ -875,6 +1475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Button hover effects
             const buttons = document.querySelectorAll('.linktree-btn');
             buttons.forEach(btn => {
                 btn.addEventListener('mouseenter', function() {
@@ -885,6 +1486,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.style.transform = 'translateY(0)';
                 });
             });
+            
+            ${clockScript}
         });
     </script>
 </body>
@@ -893,282 +1496,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function generateFullHTML(data) {
         const template = templates[data.template] || templates['1'];
+        const previewHTML = generatePreviewHTML(data);
         
-        // Use empty strings as fallback instead of default values
-        const fallbackBanner = data.bannerText || '';
-        const fallbackSubBanner = data.subBanner || '';
-        const fallbackTicker = data.tickerText || '';
-        const fallbackImg = data.img || '';
-        const fallbackName = data.nama || '';
-        const fallbackBio = data.deskripsi || '';
-        const fallbackFooter = data.footer || '';
-        
-        return `<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${fallbackName || 'Linktree'} - Linktree</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        ${template.style}
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            font-family: ${template.font};
-        }
-        
-        .linktree-container {
-            max-width: 480px;
-            width: 100%;
-            padding: 40px;
-            border-radius: 24px;
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-        }
-        
-        .banner-title {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            font-weight: 700;
-        }
-        
-        .banner-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 20px;
-        }
-        
-        .ticker {
-            display: inline-block;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-        
-        .profile-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            margin: 0 auto 20px;
-        }
-        
-        .profile-name {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-        
-        .profile-bio {
-            font-size: 1rem;
-            opacity: 0.9;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .notice-box {
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            text-align: left;
-            line-height: 1.5;
-        }
-        
-        .checkbox-links {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .checkbox-link {
-            padding: 15px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-align: left;
-        }
-        
-        .checkbox-link i {
-            font-size: 1.2rem;
-            min-width: 24px;
-        }
-        
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .medsos-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-        
-        .links-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .linktree-btn {
-            padding: 18px 24px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .custom-link i {
-            font-size: 1.1rem;
-        }
-        
-        .footer-text {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .linktree-container {
-                padding: 25px 20px;
-            }
-            
-            .banner-title {
-                font-size: 1.5rem;
-            }
-            
-            .ticker {
-                font-size: 1rem;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="linktree-container">
-        ${fallbackBanner ? `<h1 class="banner-title">${fallbackBanner}</h1>` : ''}
-        ${fallbackSubBanner ? `<p class="banner-subtitle">${fallbackSubBanner}</p>` : ''}
-        ${fallbackTicker ? `<div class="ticker">${fallbackTicker}</div>` : ''}
-        
-        ${fallbackImg ? `<img src="${fallbackImg}" alt="${fallbackName || 'Profile'}" class="profile-img">` : ''}
-        ${fallbackName ? `<h1 class="profile-name">${fallbackName}</h1>` : ''}
-        ${fallbackBio ? `<p class="profile-bio">${fallbackBio}</p>` : ''}
-        
-        ${data.notices.length > 0 ? data.notices.map(notice => `<div class="notice-box">${notice}</div>`).join('') : ''}
-        
-        ${data.medsosCheckbox.length > 0 ? `
-            <div class="checkbox-links">
-                ${data.medsosCheckbox.map(item => `
-                    <a href="${item.url}" target="_blank" class="linktree-btn checkbox-link" rel="noopener noreferrer">
-                        ${item.checked ? '<i class="fas fa-check-square"></i>' : '<i class="far fa-square"></i>'}
-                        <span>${item.text}</span>
-                    </a>
-                `).join('')}
-            </div>
-        ` : ''}
-        
-        ${data.medsos.length > 0 ? `
-            <div class="social-links">
-                ${data.medsos.map(item => `
-                    <a href="${item.url}" target="_blank" class="linktree-btn medsos-btn" rel="noopener noreferrer">
-                        <i class="fab ${item.icon}"></i>
-                    </a>
-                `).join('')}
-            </div>
-        ` : ''}
-        
-        ${data.links.length > 0 ? `
-            <div class="links-container">
-                ${data.links.map(item => `
-                    <a href="${item.url}" target="_blank" class="linktree-btn custom-link" rel="noopener noreferrer">
-                        <i class="fas ${item.icon}"></i>
-                        <span>${item.text}</span>
-                    </a>
-                `).join('')}
-            </div>
-        ` : ''}
-        
-        ${fallbackFooter ? `<p class="footer-text">${fallbackFooter}</p>` : ''}
-    </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('.linktree-btn');
-            buttons.forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-3px)';
-                });
-                
-                btn.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
-    </script>
-</body>
-</html>`;
-    }
-    
-    // ==================== AUTO-SAVE FUNCTION ====================
-    function autoSave() {
-        const data = collectFormData();
-        saveToLocalStorage(data);
-        console.log('💾 Auto-saved');
+        return previewHTML;
     }
     
     // ==================== EVENT HANDLERS ====================
@@ -1176,6 +1506,17 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('👁️ Generating preview...');
         
         const data = collectFormData();
+        
+        // Validation
+        if (!data.nama || !data.deskripsi) {
+            showNotification('⚠️ Harap isi Nama dan Deskripsi terlebih dahulu', 'error');
+            return;
+        }
+        
+        if (data.medsos.length === 0 && data.links.length === 0 && data.medsosCheckbox.length === 0) {
+            showNotification('🔗 Tambahkan minimal satu link (media sosial atau custom link)', 'error');
+            return;
+        }
         
         // Save current state
         saveToLocalStorage(data);
@@ -1196,12 +1537,11 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.copyBtn.disabled = false;
         elements.downloadBtn.disabled = false;
         
+        showNotification('✅ Preview berhasil digenerate', 'success');
         console.log('✅ Preview generated successfully');
     }
     
     function handleReset() {
-        console.log('🔄 Resetting form...');
-        
         if (!confirm('Reset semua input? Semua data akan dihapus dan tidak bisa dikembalikan.')) {
             return;
         }
@@ -1231,6 +1571,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         elements.template.value = '1';
         
+        // Reset ticker to static
+        const staticRadio = document.querySelector('input[name="tickerType"][value="static"]');
+        if (staticRadio) {
+            staticRadio.checked = true;
+            staticRadio.dispatchEvent(new Event('change'));
+        }
+        
+        // Reset clock configs
+        document.getElementById('showSeconds').checked = true;
+        document.getElementById('showDate').checked = false;
+        document.getElementById('militaryTime').checked = false;
+        document.getElementById('blinkSeparator').checked = true;
+        document.getElementById('timezone').value = 'local';
+        
+        document.getElementById('showAnalogSeconds').checked = true;
+        document.getElementById('showAnalogNumbers').checked = true;
+        document.getElementById('smoothAnalog').checked = true;
+        document.getElementById('analogTimezone').value = 'local';
+        
         // Reset preview
         elements.iframePlaceholder.style.display = 'flex';
         elements.previewFrame.style.display = 'none';
@@ -1254,12 +1613,11 @@ document.addEventListener('DOMContentLoaded', function() {
             addLinkField();
         }, 100);
         
+        showNotification('✅ Form telah direset', 'success');
         console.log('✅ Form reset complete');
     }
     
     async function handleCopy() {
-        console.log('📋 Copying HTML to clipboard...');
-        
         const html = elements.htmlOutput.textContent;
         
         try {
@@ -1268,6 +1626,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 elements.copyOverlay.classList.remove('show');
             }, 2000);
+            showNotification('✅ HTML berhasil disalin ke clipboard', 'success');
             console.log('✅ HTML copied to clipboard');
         } catch (err) {
             console.error('❌ Failed to copy:', err);
@@ -1284,9 +1643,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     elements.copyOverlay.classList.remove('show');
                 }, 2000);
+                showNotification('✅ HTML berhasil disalin ke clipboard', 'success');
             } catch (fallbackErr) {
                 console.error('❌ Fallback copy failed:', fallbackErr);
-                alert('Gagal menyalin. Silakan copy manual dari text area.');
+                showNotification('❌ Gagal menyalin. Silakan copy manual dari text area.', 'error');
             }
             
             document.body.removeChild(textArea);
@@ -1294,41 +1654,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleDownload() {
-        console.log('💾 Downloading HTML file...');
-        
         const html = elements.htmlOutput.textContent;
         const data = collectFormData();
         const filename = `linktree-${data.nama.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'linktree'}.html`;
         
-        const blob = new Blob([html], { type: 'text/html' });
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
+        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
+        showNotification(`✅ File berhasil diunduh: ${filename}`, 'success');
         console.log('✅ File downloaded:', filename);
     }
     
-    // ==================== RESTORE SAVED DATA ====================
+    // ==================== INITIALIZATION ====================
     function restoreSavedData() {
         const saved = loadFromLocalStorage();
         
         if (saved) {
             console.log('🔄 Restoring saved data...');
             
-            // Restore basic fields - HANYA jika ada data tersimpan
+            // Restore basic fields
             elements.bannerText.value = saved.bannerText || '';
             elements.subBanner.value = saved.subBanner || '';
-            elements.tickerText.value = saved.tickerText || '';
             elements.img.value = saved.img || '';
             elements.nama.value = saved.nama || '';
             elements.deskripsi.value = saved.deskripsi || '';
             elements.footer.value = saved.footer || '';
+            
+            // Restore ticker config
+            if (saved.ticker) {
+                restoreTickerConfig(saved.ticker);
+            }
             
             // Restore template
             if (saved.template) {
@@ -1405,7 +1769,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
     }
     
-    // ==================== INITIALIZATION ====================
     function initialize() {
         console.log('⚡ Initializing Linktree Builder...');
         
@@ -1431,16 +1794,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
+        // Setup ticker type selector
+        setupTickerTypeSelector();
+        
         // Auto-save on input for basic fields
         [elements.bannerText, elements.subBanner, elements.tickerText, 
          elements.img, elements.nama, elements.deskripsi, elements.footer].forEach(input => {
-            input.addEventListener('input', autoSave);
+            if (input) input.addEventListener('input', autoSave);
         });
         
         // Try to restore saved data
         const hasSavedData = restoreSavedData();
         
-        // If no saved data, start with completely empty form
+        // If no saved data, start with empty form
         if (!hasSavedData) {
             // Clear all inputs (double-check)
             elements.bannerText.value = '';
@@ -1463,12 +1829,18 @@ document.addEventListener('DOMContentLoaded', function() {
             addMedsosField();
             addLinkField();
             
-            console.log('🆕 Starting with completely empty form');
+            console.log('🆕 Starting with empty form');
         }
         
+        isInitializing = false;
         console.log('🎉 Linktree Builder initialized successfully!');
     }
     
     // Start the application
     initialize();
+    
+    // Clean up intervals when page unloads
+    window.addEventListener('beforeunload', function() {
+        stopClockIntervals();
+    });
 });
