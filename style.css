@@ -1,0 +1,132 @@
+/* ==================== DYNAMIC ITEMS IMPROVEMENT ==================== */
+
+/* Untuk custom links dengan 3 kolom */
+.dynamic-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr auto;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .dynamic-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+/* Platform select styling */
+.link-platform-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    padding: 15px;
+    font-family: 'Poppins', sans-serif;
+    width: 100%;
+}
+
+.link-platform-select:focus {
+    border-color: #00dbde;
+    box-shadow: 0 0 0 3px rgba(0, 219, 222, 0.2);
+    outline: none;
+}
+
+/* Icon preview in preview */
+.medsos-btn i,
+.custom-link i {
+    font-size: 1.2rem;
+}
+
+/* Platform badge untuk preview */
+.platform-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+/* Preview styling improvements */
+.preview-container .linktree-btn {
+    font-family: inherit;
+}
+
+/* Ensure icons are visible */
+.fab, .fas {
+    font-family: 'Font Awesome 6 Brands', 'Font Awesome 6 Free';
+}
+
+/* Button colors based on platform */
+.medsos-btn.youtube {
+    background: #FF0000;
+    color: white;
+}
+
+.medsos-btn.instagram {
+    background: #E4405F;
+    color: white;
+}
+
+.medsos-btn.github {
+    background: #181717;
+    color: white;
+}
+
+.medsos-btn.linkedin {
+    background: #0A66C2;
+    color: white;
+}
+
+.medsos-btn.twitter {
+    background: #000000;
+    color: white;
+}
+
+.medsos-btn.facebook {
+    background: #1877F2;
+    color: white;
+}
+
+.medsos-btn.telegram {
+    background: #26A5E4;
+    color: white;
+}
+
+.medsos-btn.discord {
+    background: #5865F2;
+    color: white;
+}
+
+.medsos-btn.spotify {
+    background: #1DB954;
+    color: white;
+}
+
+/* Custom link colors */
+.custom-link.website {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.custom-link.portfolio {
+    background: rgba(156, 39, 176, 0.1);
+    border-color: #9C27B0;
+    color: #9C27B0;
+}
+
+.custom-link.store {
+    background: rgba(76, 175, 80, 0.1);
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+.custom-link.donate {
+    background: rgba(244, 67, 54, 0.1);
+    border-color: #F44336;
+    color: #F44336;
+}
