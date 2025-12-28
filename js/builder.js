@@ -47,7 +47,7 @@ const APP_CONFIG = {
             icon: 'fas fa-moon'
         },
         chill: {
-            name: 'Chill Beats',
+            name: 'Pixel Chiptune',
             url: 'https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-667.mp3',
             icon: 'fas fa-gamepad'
         }
@@ -371,58 +371,75 @@ class PixelLinkBuilder {
     cacheElements() {
         this.elements = {
             // Profile
-            nameInput: document.getElementById('name-input'),
-            bioInput: document.getElementById('bio-input'),
-            avatarUrl: document.getElementById('avatar-url'),
-            avatarUpload: document.getElementById('avatar-upload'),
-            clearAvatar: document.getElementById('clear-avatar'),
+            nameInput: document.getElementById('name'),
+            bioInput: document.getElementById('bio'),
+            avatarUrl: document.getElementById('avatar'),
+            
+            // Avatar upload
+            avatarUploadInput: document.getElementById('avatar-upload-input'),
+            uploadArea: document.getElementById('upload-area'),
+            previewUpload: document.getElementById('preview-upload'),
+            uploadedImage: document.getElementById('uploaded-image'),
+            removeUpload: document.getElementById('remove-upload'),
             
             // Template
             templateOptions: document.querySelectorAll('.template-option'),
             
             // Music
-            musicToggle: document.getElementById('music-toggle'),
+            musicToggle: document.getElementById('music-enabled'),
             musicOptions: document.getElementById('music-options'),
             musicSelect: document.getElementById('music-select'),
-            volumeSlider: document.getElementById('volume-slider'),
+            volumeSlider: document.getElementById('volume'),
             volumeValue: document.getElementById('volume-value'),
-            testMusicBtn: document.getElementById('test-music-btn'),
+            testMusicBtn: document.getElementById('test-music'),
             
             // Social Links
-            socialsList: document.getElementById('socials-list'),
-            addSocialBtn: document.getElementById('add-social-btn'),
+            socialsContainer: document.getElementById('socials-container'),
+            addSocialBtn: document.getElementById('add-social'),
             
             // Custom Links
-            linksList: document.getElementById('links-list'),
-            addLinkBtn: document.getElementById('add-link-btn'),
+            linksContainer: document.getElementById('links-container'),
+            addLinkBtn: document.getElementById('add-link'),
             
             // Preview
-            deviceTabs: document.querySelectorAll('.device-tab'),
-            deviceScreen: document.getElementById('device-screen'),
-            previewContent: document.getElementById('preview-content'),
-            skeletonLoader: document.getElementById('skeleton-loader'),
+            previewWrapper: document.getElementById('preview-wrapper'),
+            previewModeBtns: document.querySelectorAll('.preview-mode-btn'),
+            refreshPreviewBtn: document.getElementById('refresh-preview'),
             
             // Export
-            copyBtn: document.getElementById('copy-html-btn'),
-            downloadBtn: document.getElementById('download-btn'),
-            exportBtn: document.getElementById('export-btn'),
+            copyBtn: document.getElementById('copy-html'),
+            downloadBtn: document.getElementById('download-html'),
+            previewFullBtn: document.getElementById('preview-full'),
             
             // Actions
-            resetBtn: document.getElementById('reset-btn'),
+            resetBtn: document.getElementById('reset-all'),
+            previewBtn: document.getElementById('preview-btn'),
             
             // Audio
-            testAudio: document.getElementById('test-audio')
+            testAudio: document.getElementById('test-audio'),
+            
+            // Main container
+            mainContainer: document.getElementById('main-container')
         };
     }
     
     // Initialize UI components
     async initUI() {
+        // Hide loading screen and show main container
+        const loading = document.getElementById('loading');
+        if (loading && this.elements.mainContainer) {
+            loading.style.display = 'none';
+            this.elements.mainContainer.style.display = 'block';
+        }
+        
         // Animate container entrance
-        await AnimationController.animate(
-            document.querySelector('.app-container'),
-            'containerEnter',
-            APP_CONFIG.animations.duration.slower
-        );
+        if (this.elements.mainContainer) {
+            await AnimationController.animate(
+                this.elements.mainContainer,
+                'fadeIn',
+                APP_CONFIG.animations.duration.slower
+            );
+        }
         
         // Stagger form groups
         await AnimationController.stagger(
@@ -449,10 +466,13 @@ class PixelLinkBuilder {
         if (el.bioInput) el.bioInput.value = profile.bio || '';
         if (el.avatarUrl) el.avatarUrl.value = profile.avatarType === 'url' ? profile.avatar || '' : '';
         
+        // Set avatar tabs
+        this.handleAvatarTabSwitch(profile.avatarType || 'url');
+        
         // Template
         if (el.templateOptions) {
             el.templateOptions.forEach(option => {
-                option.classList.toggle('selected', option.dataset.template === template);
+                option.classList.toggle('active', option.dataset.template === template);
             });
         }
         
@@ -467,15 +487,15 @@ class PixelLinkBuilder {
         }
         
         // Preview device
-        if (el.deviceTabs) {
-            el.deviceTabs.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.device === preview.device);
+        if (el.previewModeBtns) {
+            el.previewModeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === preview.device);
             });
         }
         
-        if (el.deviceScreen) {
-            el.deviceScreen.className = 'device-screen';
-            el.deviceScreen.classList.add(preview.device);
+        if (el.previewWrapper) {
+            el.previewWrapper.classList.remove('desktop', 'mobile');
+            el.previewWrapper.classList.add(preview.device);
         }
         
         // Load dynamic items
@@ -487,58 +507,124 @@ class PixelLinkBuilder {
         const el = this.elements;
         
         // Profile inputs
-        el.nameInput?.addEventListener('input', this.debounce((e) => {
-            this.state.profile.name = e.target.value;
-            this.state.save();
-            this.updatePreview();
-        }, APP_CONFIG.previewUpdateDelay));
-        
-        el.bioInput?.addEventListener('input', this.debounce((e) => {
-            this.state.profile.bio = e.target.value;
-            this.state.save();
-            this.updatePreview();
-        }, APP_CONFIG.previewUpdateDelay));
-        
-        el.avatarUrl?.addEventListener('input', this.debounce((e) => {
-            if (this.state.profile.avatarType === 'url') {
-                this.state.profile.avatar = e.target.value;
+        if (el.nameInput) {
+            el.nameInput.addEventListener('input', this.debounce((e) => {
+                this.state.profile.name = e.target.value;
                 this.state.save();
                 this.updatePreview();
-            }
-        }, APP_CONFIG.previewUpdateDelay));
+            }, APP_CONFIG.previewUpdateDelay));
+        }
         
-        el.avatarUpload?.addEventListener('change', (e) => this.handleAvatarUpload(e));
-        el.clearAvatar?.addEventListener('click', () => this.clearAvatar());
+        if (el.bioInput) {
+            el.bioInput.addEventListener('input', this.debounce((e) => {
+                this.state.profile.bio = e.target.value;
+                this.state.save();
+                this.updatePreview();
+            }, APP_CONFIG.previewUpdateDelay));
+        }
+        
+        if (el.avatarUrl) {
+            el.avatarUrl.addEventListener('input', this.debounce((e) => {
+                if (this.state.profile.avatarType === 'url') {
+                    this.state.profile.avatar = e.target.value;
+                    this.state.save();
+                    this.updatePreview();
+                }
+            }, APP_CONFIG.previewUpdateDelay));
+        }
+        
+        // Avatar upload handling
+        if (el.uploadArea) {
+            el.uploadArea.addEventListener('click', () => {
+                if (el.avatarUploadInput) {
+                    el.avatarUploadInput.click();
+                }
+            });
+        }
+        
+        if (el.avatarUploadInput) {
+            el.avatarUploadInput.addEventListener('change', (e) => this.handleAvatarUpload(e));
+        }
+        
+        if (el.removeUpload) {
+            el.removeUpload.addEventListener('click', () => this.clearAvatar());
+        }
+        
+        // Avatar tab switching
+        document.querySelectorAll('.option-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const option = tab.dataset.option;
+                this.handleAvatarTabSwitch(option);
+            });
+        });
         
         // Template selection
-        el.templateOptions?.forEach(option => {
-            option.addEventListener('click', () => this.handleTemplateSelect(option));
-        });
+        if (el.templateOptions) {
+            el.templateOptions.forEach(option => {
+                option.addEventListener('click', () => this.handleTemplateSelect(option));
+            });
+        }
         
         // Music controls
-        el.musicToggle?.addEventListener('change', (e) => this.handleMusicToggle(e));
-        el.musicSelect?.addEventListener('change', (e) => this.handleMusicSelect(e));
-        el.volumeSlider?.addEventListener('input', (e) => this.handleVolumeChange(e));
-        el.testMusicBtn?.addEventListener('click', () => this.testMusic());
+        if (el.musicToggle) {
+            el.musicToggle.addEventListener('change', (e) => this.handleMusicToggle(e));
+        }
+        
+        if (el.musicSelect) {
+            el.musicSelect.addEventListener('change', (e) => this.handleMusicSelect(e));
+        }
+        
+        if (el.volumeSlider) {
+            el.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
+        }
+        
+        if (el.testMusicBtn) {
+            el.testMusicBtn.addEventListener('click', () => this.testMusic());
+        }
         
         // Device tabs
-        el.deviceTabs?.forEach(tab => {
-            tab.addEventListener('click', () => this.handleDeviceSwitch(tab));
-        });
+        if (el.previewModeBtns) {
+            el.previewModeBtns.forEach(btn => {
+                btn.addEventListener('click', () => this.handleDeviceSwitch(btn));
+            });
+        }
         
         // Social links
-        el.addSocialBtn?.addEventListener('click', () => this.addSocialItem());
+        if (el.addSocialBtn) {
+            el.addSocialBtn.addEventListener('click', () => this.addSocialItem());
+        }
         
         // Custom links
-        el.addLinkBtn?.addEventListener('click', () => this.addLinkItem());
+        if (el.addLinkBtn) {
+            el.addLinkBtn.addEventListener('click', () => this.addLinkItem());
+        }
         
         // Export buttons
-        el.copyBtn?.addEventListener('click', () => this.copyHTML());
-        el.downloadBtn?.addEventListener('click', () => this.downloadHTML());
-        el.exportBtn?.addEventListener('click', () => this.downloadHTML());
+        if (el.copyBtn) {
+            el.copyBtn.addEventListener('click', () => this.copyHTML());
+        }
+        
+        if (el.downloadBtn) {
+            el.downloadBtn.addEventListener('click', () => this.downloadHTML());
+        }
+        
+        if (el.previewFullBtn) {
+            el.previewFullBtn.addEventListener('click', () => this.openFullPreview());
+        }
+        
+        if (el.previewBtn) {
+            el.previewBtn.addEventListener('click', () => this.openFullPreview());
+        }
         
         // Reset button
-        el.resetBtn?.addEventListener('click', () => this.resetAll());
+        if (el.resetBtn) {
+            el.resetBtn.addEventListener('click', () => this.resetAll());
+        }
+        
+        // Refresh preview
+        if (el.refreshPreviewBtn) {
+            el.refreshPreviewBtn.addEventListener('click', () => this.updatePreview());
+        }
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
@@ -568,6 +654,23 @@ class PixelLinkBuilder {
     
     // ===== EVENT HANDLERS =====
     
+    // Handle avatar tab switching
+    handleAvatarTabSwitch(option) {
+        // Update UI tabs
+        document.querySelectorAll('.option-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.option === option);
+        });
+        
+        // Show/hide content
+        document.querySelectorAll('.option-content').forEach(content => {
+            content.classList.toggle('hidden', content.id !== `avatar-${option}`);
+        });
+        
+        // Update state
+        this.state.profile.avatarType = option;
+        this.state.save();
+    }
+    
     // Avatar upload handler
     async handleAvatarUpload(event) {
         const file = event.target.files[0];
@@ -590,15 +693,13 @@ class PixelLinkBuilder {
             // Show success
             Toast.show('Avatar uploaded successfully', 'success');
             
-            // Add spring animation to avatar preview
-            const previewImg = document.querySelector('.avatar-preview img');
-            if (previewImg) {
-                previewImg.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    previewImg.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
-                    previewImg.style.transform = 'scale(1)';
-                }, 100);
+            // Update uploaded image preview
+            if (this.elements.uploadedImage && this.elements.previewUpload) {
+                this.elements.uploadedImage.src = base64;
+                this.elements.previewUpload.classList.remove('hidden');
+                this.elements.uploadArea.style.display = 'none';
             }
+            
         } catch (error) {
             console.error('Avatar upload failed:', error);
             Toast.show('Failed to upload avatar', 'error');
@@ -609,8 +710,17 @@ class PixelLinkBuilder {
     clearAvatar() {
         this.state.profile.avatar = '';
         this.state.profile.avatarType = 'url';
-        this.elements.avatarUrl.value = '';
-        this.elements.avatarUpload.value = '';
+        if (this.elements.avatarUrl) this.elements.avatarUrl.value = '';
+        if (this.elements.avatarUploadInput) this.elements.avatarUploadInput.value = '';
+        
+        // Hide preview
+        if (this.elements.previewUpload) {
+            this.elements.previewUpload.classList.add('hidden');
+        }
+        if (this.elements.uploadArea) {
+            this.elements.uploadArea.style.display = 'block';
+        }
+        
         this.state.save();
         this.updatePreview();
         Toast.show('Avatar cleared', 'info');
@@ -620,11 +730,11 @@ class PixelLinkBuilder {
     async handleTemplateSelect(option) {
         const template = option.dataset.template;
         
-        // Update UI with animation
+        // Update UI
         this.elements.templateOptions.forEach(opt => {
-            opt.classList.remove('selected');
+            opt.classList.remove('active');
         });
-        option.classList.add('selected');
+        option.classList.add('active');
         
         // Spring animation on selected template
         await AnimationController.animate(
@@ -633,10 +743,10 @@ class PixelLinkBuilder {
             APP_CONFIG.animations.duration.normal
         );
         
-        // Update state and preview with crossfade
+        // Update state and preview
         this.state.template = template;
         this.state.save();
-        await this.updatePreviewWithTransition();
+        await this.updatePreview();
     }
     
     // Music toggle handler
@@ -644,15 +754,17 @@ class PixelLinkBuilder {
         const enabled = event.target.checked;
         this.state.music.enabled = enabled;
         
-        if (enabled) {
-            this.elements.musicOptions.classList.remove('hidden');
-            AnimationController.animate(
-                this.elements.musicOptions,
-                'fadeSlideUp',
-                APP_CONFIG.animations.duration.normal
-            );
-        } else {
-            this.elements.musicOptions.classList.add('hidden');
+        if (this.elements.musicOptions) {
+            if (enabled) {
+                this.elements.musicOptions.classList.remove('hidden');
+                AnimationController.animate(
+                    this.elements.musicOptions,
+                    'fadeSlideUp',
+                    APP_CONFIG.animations.duration.normal
+                );
+            } else {
+                this.elements.musicOptions.classList.add('hidden');
+            }
         }
         
         this.state.save();
@@ -670,17 +782,19 @@ class PixelLinkBuilder {
     handleVolumeChange(event) {
         const value = parseInt(event.target.value);
         this.state.music.volume = value;
-        this.elements.volumeValue.textContent = `${value}%`;
+        if (this.elements.volumeValue) {
+            this.elements.volumeValue.textContent = `${value}%`;
+        }
         this.state.save();
         this.updatePreview();
     }
     
     // Device switch handler
     async handleDeviceSwitch(tab) {
-        const device = tab.dataset.device;
+        const device = tab.dataset.mode;
         
         // Update UI
-        this.elements.deviceTabs.forEach(t => t.classList.remove('active'));
+        this.elements.previewModeBtns.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
         // Spring animation on tab
@@ -694,108 +808,186 @@ class PixelLinkBuilder {
         this.state.preview.device = device;
         
         // Add scale animation
-        this.elements.deviceScreen.style.transform = 'scale(0.98)';
-        this.elements.deviceScreen.classList.remove('desktop', 'mobile');
-        this.elements.deviceScreen.classList.add(device);
-        
-        setTimeout(() => {
-            this.elements.deviceScreen.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
-            this.elements.deviceScreen.style.transform = 'scale(1)';
-        }, 10);
+        if (this.elements.previewWrapper) {
+            this.elements.previewWrapper.style.transform = 'scale(0.98)';
+            this.elements.previewWrapper.classList.remove('desktop', 'mobile');
+            this.elements.previewWrapper.classList.add(device);
+            
+            setTimeout(() => {
+                this.elements.previewWrapper.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
+                this.elements.previewWrapper.style.transform = 'scale(1)';
+            }, 10);
+        }
         
         this.state.save();
+    }
+    
+    // Open full preview
+    openFullPreview() {
+        // Save current state
+        this.state.save();
+        
+        // Open preview page
+        window.open('preview.html', '_blank');
     }
     
     // ===== DYNAMIC ITEMS MANAGEMENT =====
     
     // Load dynamic items from state
     loadDynamicItems() {
-        // Clear existing items
-        while (this.elements.socialsList.firstChild) {
-            this.elements.socialsList.removeChild(this.elements.socialsList.firstChild);
-        }
-        while (this.elements.linksList.firstChild) {
-            this.elements.linksList.removeChild(this.elements.linksList.firstChild);
+        // Clear existing items in containers
+        if (this.elements.socialsContainer) {
+            const existingSocials = this.elements.socialsContainer.querySelectorAll('.social-item:not(:first-child)');
+            existingSocials.forEach(item => item.remove());
         }
         
-        // Add social items
+        if (this.elements.linksContainer) {
+            const existingLinks = this.elements.linksContainer.querySelectorAll('.link-item:not(:first-child)');
+            existingLinks.forEach(item => item.remove());
+        }
+        
+        // Add social items from state
         if (this.state.socials.length > 0) {
-            this.state.socials.forEach(social => {
-                this.addSocialItem(social);
+            this.state.socials.forEach((social, index) => {
+                if (index > 0) { // First one already exists
+                    this.addSocialItem(social);
+                } else {
+                    // Update first item
+                    const firstSocial = this.elements.socialsContainer.querySelector('.social-item');
+                    if (firstSocial) {
+                        const platformSelect = firstSocial.querySelector('.social-platform');
+                        const urlInput = firstSocial.querySelector('.social-url');
+                        if (platformSelect) platformSelect.value = social.platform || '';
+                        if (urlInput) urlInput.value = social.url || '';
+                    }
+                }
             });
-        } else {
-            this.addSocialItem();
         }
         
-        // Add link items
+        // Add link items from state
         if (this.state.links.length > 0) {
-            this.state.links.forEach(link => {
-                this.addLinkItem(link);
+            this.state.links.forEach((link, index) => {
+                if (index > 0) { // First one already exists
+                    this.addLinkItem(link);
+                } else {
+                    // Update first item
+                    const firstLink = this.elements.linksContainer.querySelector('.link-item');
+                    if (firstLink) {
+                        const textInput = firstLink.querySelector('.link-text');
+                        const urlInput = firstLink.querySelector('.link-url');
+                        if (textInput) textInput.value = link.text || '';
+                        if (urlInput) urlInput.value = link.url || '';
+                    }
+                }
             });
-        } else {
-            this.addLinkItem();
         }
+        
+        // Setup event listeners for existing items
+        this.setupDynamicItemsListeners();
+    }
+    
+    // Setup event listeners for dynamic items
+    setupDynamicItemsListeners() {
+        // Social items
+        document.querySelectorAll('.social-item').forEach((item, index) => {
+            const platformSelect = item.querySelector('.social-platform');
+            const urlInput = item.querySelector('.social-url');
+            const removeBtn = item.querySelector('.remove-social');
+            
+            if (platformSelect) {
+                platformSelect.addEventListener('change', () => {
+                    this.updateSocialItem(index, platformSelect.value, urlInput.value);
+                });
+            }
+            
+            if (urlInput) {
+                urlInput.addEventListener('input', this.debounce(() => {
+                    this.updateSocialItem(index, platformSelect.value, urlInput.value);
+                }, APP_CONFIG.previewUpdateDelay));
+            }
+            
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    this.removeSocialItem(index);
+                });
+            }
+        });
+        
+        // Link items
+        document.querySelectorAll('.link-item').forEach((item, index) => {
+            const textInput = item.querySelector('.link-text');
+            const urlInput = item.querySelector('.link-url');
+            const removeBtn = item.querySelector('.remove-link');
+            
+            if (textInput) {
+                textInput.addEventListener('input', this.debounce(() => {
+                    this.updateLinkItem(index, textInput.value, urlInput.value);
+                }, APP_CONFIG.previewUpdateDelay));
+            }
+            
+            if (urlInput) {
+                urlInput.addEventListener('input', this.debounce(() => {
+                    this.updateLinkItem(index, textInput.value, urlInput.value);
+                }, APP_CONFIG.previewUpdateDelay));
+            }
+            
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    this.removeLinkItem(index);
+                });
+            }
+        });
     }
     
     // Add social item
     addSocialItem(data = null) {
-        const container = this.elements.socialsList;
-        const index = container.children.length;
+        const container = this.elements.socialsContainer;
+        if (!container) return;
         
-        const item = document.createElement('div');
-        item.className = 'dynamic-item';
-        item.dataset.index = index;
+        const index = container.querySelectorAll('.social-item').length;
+        const firstItem = container.querySelector('.social-item');
         
-        const platforms = APP_CONFIG.socialPlatforms.map(p => 
-            `<option value="${p.id}">${p.name}</option>`
-        ).join('');
+        // Clone the first item as template
+        const newItem = firstItem.cloneNode(true);
+        newItem.dataset.index = index;
         
-        item.innerHTML = `
-            <div class="dynamic-item-header">
-                <div class="input-wrapper flex-1">
-                    <select class="input-field select-field social-platform" data-tooltip="Select social platform">
-                        <option value="">Select Platform</option>
-                        ${platforms}
-                    </select>
-                </div>
-                <button class="btn btn-icon remove-btn" data-tooltip="Remove this link">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            <div class="input-wrapper">
-                <input type="text" class="input-field social-url" 
-                       placeholder="https://example.com/username"
-                       data-tooltip="Enter your profile URL">
-            </div>
-        `;
-        
-        container.appendChild(item);
+        // Clear values
+        const platformSelect = newItem.querySelector('.social-platform');
+        const urlInput = newItem.querySelector('.social-url');
+        if (platformSelect) platformSelect.value = '';
+        if (urlInput) urlInput.value = '';
         
         // Set data if provided
-        if (data) {
-            item.querySelector('.social-platform').value = data.platform || '';
-            item.querySelector('.social-url').value = data.url || '';
+        if (data && platformSelect && urlInput) {
+            platformSelect.value = data.platform || '';
+            urlInput.value = data.url || '';
         }
         
         // Add event listeners
-        const platformSelect = item.querySelector('.social-platform');
-        const urlInput = item.querySelector('.social-url');
-        const removeBtn = item.querySelector('.remove-btn');
+        const removeBtn = newItem.querySelector('.remove-social');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                this.removeSocialItem(index);
+            });
+        }
         
-        platformSelect.addEventListener('change', () => {
-            this.updateSocialItem(index, platformSelect.value, urlInput.value);
-        });
+        if (platformSelect) {
+            platformSelect.addEventListener('change', () => {
+                this.updateSocialItem(index, platformSelect.value, urlInput.value);
+            });
+        }
         
-        urlInput.addEventListener('input', this.debounce(() => {
-            this.updateSocialItem(index, platformSelect.value, urlInput.value);
-        }, APP_CONFIG.previewUpdateDelay));
+        if (urlInput) {
+            urlInput.addEventListener('input', this.debounce(() => {
+                this.updateSocialItem(index, platformSelect.value, urlInput.value);
+            }, APP_CONFIG.previewUpdateDelay));
+        }
         
-        removeBtn.addEventListener('click', () => {
-            this.removeSocialItem(index);
-        });
+        // Add to container
+        container.appendChild(newItem);
         
-        // Animate in with spring effect
-        AnimationController.animate(item, 'slideIn', APP_CONFIG.animations.duration.normal);
+        // Animate in
+        AnimationController.animate(newItem, 'fadeSlideUp', APP_CONFIG.animations.duration.normal);
         
         // Update state
         if (data) {
@@ -807,12 +999,7 @@ class PixelLinkBuilder {
         this.state.save();
         this.updatePreview();
         
-        // Scroll to new item with smooth behavior
-        setTimeout(() => {
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
-        
-        return item;
+        return newItem;
     }
     
     // Update social item
@@ -829,94 +1016,89 @@ class PixelLinkBuilder {
     
     // Remove social item
     async removeSocialItem(index) {
-        const item = document.querySelector(`#socials-list .dynamic-item[data-index="${index}"]`);
-        
-        if (item && this.state.socials.length > 1) {
-            // Animate out
-            item.classList.add('removing');
-            
-            await AnimationController.animate(
-                item,
-                'slideOut',
-                APP_CONFIG.animations.duration.normal
-            );
-            
-            item.remove();
-            
-            // Update indices
-            document.querySelectorAll('#socials-list .dynamic-item').forEach((el, i) => {
-                el.dataset.index = i;
-            });
-            
-            // Update state
-            this.state.socials.splice(index, 1);
-            this.state.save();
-            this.updatePreview();
-            
-            Toast.show('Social link removed', 'info');
-        } else {
+        const items = document.querySelectorAll('.social-item');
+        if (items.length <= 1) {
             // Shake animation for last item
-            if (item) {
-                await AnimationController.animate(item, 'shake', APP_CONFIG.animations.duration.fast);
-                Toast.show('At least one social link is required', 'warning');
-            }
+            await AnimationController.animate(items[0], 'shake', APP_CONFIG.animations.duration.fast);
+            Toast.show('At least one social link is required', 'warning');
+            return;
         }
+        
+        const item = items[index];
+        if (!item) return;
+        
+        // Animate out
+        item.classList.add('removing');
+        await AnimationController.animate(
+            item,
+            'slideOut',
+            APP_CONFIG.animations.duration.normal
+        );
+        
+        item.remove();
+        
+        // Update indices
+        document.querySelectorAll('.social-item').forEach((el, i) => {
+            el.dataset.index = i;
+        });
+        
+        // Update state
+        this.state.socials.splice(index, 1);
+        this.state.save();
+        this.updatePreview();
+        
+        Toast.show('Social link removed', 'info');
     }
     
     // Add link item
     addLinkItem(data = null) {
-        const container = this.elements.linksList;
-        const index = container.children.length;
+        const container = this.elements.linksContainer;
+        if (!container) return;
         
-        const item = document.createElement('div');
-        item.className = 'dynamic-item';
-        item.dataset.index = index;
+        const index = container.querySelectorAll('.link-item').length;
+        const firstItem = container.querySelector('.link-item');
         
-        item.innerHTML = `
-            <div class="dynamic-item-header">
-                <div class="input-wrapper flex-1">
-                    <input type="text" class="input-field link-text" 
-                           placeholder="Link text (e.g., Portfolio)"
-                           data-tooltip="Enter link display text">
-                </div>
-                <button class="btn btn-icon remove-btn" data-tooltip="Remove this link">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            <div class="input-wrapper">
-                <input type="text" class="input-field link-url" 
-                       placeholder="https://example.com"
-                       data-tooltip="Enter destination URL">
-            </div>
-        `;
+        // Clone the first item as template
+        const newItem = firstItem.cloneNode(true);
+        newItem.dataset.index = index;
         
-        container.appendChild(item);
+        // Clear values
+        const textInput = newItem.querySelector('.link-text');
+        const urlInput = newItem.querySelector('.link-url');
+        if (textInput) textInput.value = '';
+        if (urlInput) urlInput.value = '';
         
         // Set data if provided
-        if (data) {
-            item.querySelector('.link-text').value = data.text || '';
-            item.querySelector('.link-url').value = data.url || '';
+        if (data && textInput && urlInput) {
+            textInput.value = data.text || '';
+            urlInput.value = data.url || '';
         }
         
         // Add event listeners
-        const textInput = item.querySelector('.link-text');
-        const urlInput = item.querySelector('.link-url');
-        const removeBtn = item.querySelector('.remove-btn');
+        const removeBtn = newItem.querySelector('.remove-link');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                this.removeLinkItem(index);
+            });
+        }
         
-        textInput.addEventListener('input', this.debounce(() => {
-            this.updateLinkItem(index, textInput.value, urlInput.value);
-        }, APP_CONFIG.previewUpdateDelay));
+        if (textInput) {
+            textInput.addEventListener('input', this.debounce(() => {
+                this.updateLinkItem(index, textInput.value, urlInput.value);
+            }, APP_CONFIG.previewUpdateDelay));
+        }
         
-        urlInput.addEventListener('input', this.debounce(() => {
-            this.updateLinkItem(index, textInput.value, urlInput.value);
-        }, APP_CONFIG.previewUpdateDelay));
+        if (urlInput) {
+            urlInput.addEventListener('input', this.debounce(() => {
+                this.updateLinkItem(index, textInput.value, urlInput.value);
+            }, APP_CONFIG.previewUpdateDelay));
+        }
         
-        removeBtn.addEventListener('click', () => {
-            this.removeLinkItem(index);
-        });
+        // Add to container
+        container.appendChild(newItem);
         
         // Animate in
-        AnimationController.animate(item, 'slideIn', APP_CONFIG.animations.duration.normal);
+        AnimationController.animate(newItem, 'fadeSlideUp', APP_CONFIG.animations.duration.normal);
         
         // Update state
         if (data) {
@@ -928,12 +1110,7 @@ class PixelLinkBuilder {
         this.state.save();
         this.updatePreview();
         
-        // Scroll to new item
-        setTimeout(() => {
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
-        
-        return item;
+        return newItem;
     }
     
     // Update link item
@@ -950,133 +1127,103 @@ class PixelLinkBuilder {
     
     // Remove link item
     async removeLinkItem(index) {
-        const item = document.querySelector(`#links-list .dynamic-item[data-index="${index}"]`);
-        
-        if (item && this.state.links.length > 1) {
-            // Animate out
-            item.classList.add('removing');
-            
-            await AnimationController.animate(
-                item,
-                'slideOut',
-                APP_CONFIG.animations.duration.normal
-            );
-            
-            item.remove();
-            
-            // Update indices
-            document.querySelectorAll('#links-list .dynamic-item').forEach((el, i) => {
-                el.dataset.index = i;
-            });
-            
-            // Update state
-            this.state.links.splice(index, 1);
-            this.state.save();
-            this.updatePreview();
-            
-            Toast.show('Link removed', 'info');
-        } else {
+        const items = document.querySelectorAll('.link-item');
+        if (items.length <= 1) {
             // Shake animation for last item
-            if (item) {
-                await AnimationController.animate(item, 'shake', APP_CONFIG.animations.duration.fast);
-                Toast.show('At least one link is required', 'warning');
-            }
+            await AnimationController.animate(items[0], 'shake', APP_CONFIG.animations.duration.fast);
+            Toast.show('At least one link is required', 'warning');
+            return;
         }
+        
+        const item = items[index];
+        if (!item) return;
+        
+        // Animate out
+        item.classList.add('removing');
+        await AnimationController.animate(
+            item,
+            'slideOut',
+            APP_CONFIG.animations.duration.normal
+        );
+        
+        item.remove();
+        
+        // Update indices
+        document.querySelectorAll('.link-item').forEach((el, i) => {
+            el.dataset.index = i;
+        });
+        
+        // Update state
+        this.state.links.splice(index, 1);
+        this.state.save();
+        this.updatePreview();
+        
+        Toast.show('Link removed', 'info');
     }
     
     // ===== PREVIEW SYSTEM =====
     
-    // Update preview with smooth transition
-    async updatePreviewWithTransition() {
-        const previewContent = this.elements.previewContent;
-        const skeletonLoader = this.elements.skeletonLoader;
-        
-        // Show loading state
-        previewContent.classList.add('loading');
-        skeletonLoader.style.display = 'block';
-        
-        // Wait for transition
-        await new Promise(resolve => setTimeout(resolve, APP_CONFIG.animations.duration.slow));
-        
-        // Generate new preview
-        const html = this.generatePreviewHTML();
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
-        // Crossfade animation
-        await AnimationController.crossfade(
-            previewContent,
-            tempDiv.firstChild,
-            APP_CONFIG.animations.duration.slow
-        );
-        
-        // Replace content
-        previewContent.innerHTML = html;
-        previewContent.classList.remove('loading');
-        skeletonLoader.style.display = 'none';
-        
-        // Add fade in animation
-        await AnimationController.animate(
-            previewContent,
-            'fadeSlideUp',
-            APP_CONFIG.animations.duration.normal
-        );
-    }
-    
     // Update preview
     async updatePreview() {
-        const previewContent = this.elements.previewContent;
-        const skeletonLoader = this.elements.skeletonLoader;
+        const previewWrapper = this.elements.previewWrapper;
+        if (!previewWrapper) return;
         
         // Show loading state
-        this.state.preview.isLoading = true;
-        previewContent.classList.add('loading');
-        skeletonLoader.style.display = 'block';
+        const placeholder = previewWrapper.querySelector('.preview-placeholder');
+        if (placeholder) {
+            placeholder.style.opacity = '0.5';
+        }
         
         // Small delay for smoothness
         await new Promise(resolve => setTimeout(resolve, APP_CONFIG.previewUpdateDelay));
         
         // Generate new preview
         const html = this.generatePreviewHTML();
-        previewContent.innerHTML = html;
         
-        // Hide loader and show content
-        skeletonLoader.style.display = 'none';
-        previewContent.classList.remove('loading');
+        // Replace content with animation
+        if (previewWrapper.children.length > 0 && previewWrapper.querySelector('.preview-content')) {
+            // Crossfade animation
+            const oldContent = previewWrapper.querySelector('.preview-content');
+            const newDiv = document.createElement('div');
+            newDiv.innerHTML = html;
+            const newContent = newDiv.firstChild;
+            
+            await AnimationController.crossfade(oldContent, newContent, APP_CONFIG.animations.duration.normal);
+            previewWrapper.innerHTML = '';
+            previewWrapper.appendChild(newContent);
+        } else {
+            // First load
+            previewWrapper.innerHTML = html;
+            await AnimationController.animate(
+                previewWrapper.querySelector('.preview-content'),
+                'fadeSlideUp',
+                APP_CONFIG.animations.duration.normal
+            );
+        }
         
-        // Add fade in animation
-        await AnimationController.animate(
-            previewContent,
-            'fadeSlideUp',
-            APP_CONFIG.animations.duration.normal
-        );
-        
-        this.state.preview.isLoading = false;
+        // Restore placeholder opacity
+        if (placeholder) {
+            placeholder.style.opacity = '1';
+        }
     }
     
     // Generate preview HTML
     generatePreviewHTML() {
         const { profile, template, socials, links } = this.state;
-        const filteredSocials = socials.filter(s => s.platform && s.platform.trim() !== '');
+        const filteredSocials = socials.filter(s => s.platform && s.platform.trim() !== '' && s.url && s.url.trim() !== '');
         const filteredLinks = links.filter(l => (l.text || l.url) && (l.text.trim() !== '' || l.url.trim() !== ''));
         
         // Template configuration
         const templateConfig = APP_CONFIG.templates[template];
         
-        // Platform icons
-        const iconMap = {};
-        APP_CONFIG.socialPlatforms.forEach(platform => {
-            iconMap[platform.id] = platform.icon;
-        });
-        
         // Generate social links HTML
         const socialLinksHTML = filteredSocials.length > 0 ? `
-            <div class="social-links" style="
+            <div class="preview-socials" style="
                 display: flex;
                 justify-content: center;
                 flex-wrap: wrap;
                 gap: 12px;
-                margin-bottom: 32px;
+                margin: 30px 0;
             ">
                 ${filteredSocials.map(social => {
                     const platform = APP_CONFIG.socialPlatforms.find(p => p.id === social.platform);
@@ -1093,10 +1240,11 @@ class PixelLinkBuilder {
                                 color: white;
                                 font-size: 20px;
                                 text-decoration: none;
-                                transition: all 0.3s ${APP_CONFIG.animations.easing};
+                                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                            "
                            onmouseover="this.style.transform='translateY(-4px)'; this.style.background='${templateConfig.color}';"
-                           onmouseout="this.style.transform=''; this.style.background='';">
+                           onmouseout="this.style.transform=''; this.style.background='';"
+                           target="_blank">
                             <i class="${platform?.icon || 'fas fa-link'}"></i>
                         </a>
                     `;
@@ -1106,10 +1254,11 @@ class PixelLinkBuilder {
         
         // Generate custom links HTML
         const customLinksHTML = filteredLinks.length > 0 ? `
-            <div class="links-container" style="
+            <div class="preview-links" style="
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
+                margin: 20px 0;
             ">
                 ${filteredLinks.map(link => `
                     <a href="${link.url || '#'}" 
@@ -1123,29 +1272,46 @@ class PixelLinkBuilder {
                             font-weight: 600;
                             font-size: 16px;
                             text-align: center;
-                            transition: all 0.3s ${APP_CONFIG.animations.easing};
+                            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                             border: none;
                        "
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)';"
-                       onmouseout="this.style.transform=''; this.style.boxShadow='';">
+                       onmouseout="this.style.transform=''; this.style.boxShadow='';"
+                       target="_blank">
                         ${link.text || 'Link'}
                     </a>
                 `).join('')}
             </div>
         ` : '';
         
+        // Check if there's any content
+        const hasContent = profile.name || profile.bio || profile.avatar || filteredSocials.length > 0 || filteredLinks.length > 0;
+        
+        if (!hasContent) {
+            return `
+                <div class="preview-content">
+                    <div class="preview-placeholder">
+                        <i class="fas fa-cube"></i>
+                        <p>Preview will appear here</p>
+                        <p>Start filling the form to see your Linktree</p>
+                    </div>
+                </div>
+            `;
+        }
+        
         return `
-            <div style="
+            <div class="preview-content" style="
                 background: ${template === 'pixel' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
                               template === 'cyber' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
                               'linear-gradient(135deg, #000010, #0a0a1f)'};
                 color: #f0f0ff;
-                min-height: 100%;
+                min-height: 500px;
                 padding: 40px 24px;
                 font-family: 'Poppins', sans-serif;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                border-radius: 12px;
             ">
                 <div style="
                     width: 100%;
@@ -1181,32 +1347,20 @@ class PixelLinkBuilder {
                         ${profile.name || 'Your Name'}
                     </h1>
                     
-                    <p style="
-                        text-align: center;
-                        color: rgba(255, 255, 255, 0.8);
-                        margin-bottom: 32px;
-                        line-height: 1.6;
-                        font-size: 16px;
-                    ">
-                        ${profile.bio || 'Short bio about yourself'}
-                    </p>
+                    ${profile.bio ? `
+                        <p style="
+                            text-align: center;
+                            color: rgba(255, 255, 255, 0.8);
+                            margin-bottom: 32px;
+                            line-height: 1.6;
+                            font-size: 16px;
+                        ">
+                            ${profile.bio}
+                        </p>
+                    ` : ''}
                     
                     ${socialLinksHTML}
                     ${customLinksHTML}
-                    
-                    ${filteredSocials.length === 0 && filteredLinks.length === 0 ? `
-                        <div style="
-                            text-align: center;
-                            padding: 40px;
-                            color: rgba(255, 255, 255, 0.5);
-                            border: 2px dashed rgba(255, 255, 255, 0.1);
-                            border-radius: 12px;
-                            margin-top: 20px;
-                        ">
-                            <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px;"></i>
-                            <p style="margin: 0; font-size: 14px;">Add social links or custom links</p>
-                        </div>
-                    ` : ''}
                 </div>
             </div>
         `;
@@ -1217,14 +1371,23 @@ class PixelLinkBuilder {
     // Copy HTML to clipboard
     async copyHTML() {
         try {
-            const html = this.generateExportHTML();
+            // Use the HTMLGenerator from generate.js if available
+            let html;
+            if (window.HTMLGenerator) {
+                const generator = new HTMLGenerator(APP_CONFIG);
+                html = generator.generate(this.state);
+            } else {
+                // Fallback to simple generation
+                html = this.generateExportHTML();
+            }
+            
             await navigator.clipboard.writeText(html);
             
             // Success animation
             const btn = this.elements.copyBtn;
             const originalHTML = btn.innerHTML;
             
-            btn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
             btn.classList.add('btn-success');
             
             // Spring animation
@@ -1250,7 +1413,16 @@ class PixelLinkBuilder {
     // Download HTML file
     downloadHTML() {
         try {
-            const html = this.generateExportHTML();
+            // Use the HTMLGenerator from generate.js if available
+            let html;
+            if (window.HTMLGenerator) {
+                const generator = new HTMLGenerator(APP_CONFIG);
+                html = generator.generate(this.state);
+            } else {
+                // Fallback to simple generation
+                html = this.generateExportHTML();
+            }
+            
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             
@@ -1270,20 +1442,10 @@ class PixelLinkBuilder {
         }
     }
     
-    // Generate export HTML
+    // Generate export HTML (fallback)
     generateExportHTML() {
-        const { profile, template, socials, links, music } = this.state;
-        const filteredSocials = socials.filter(s => s.platform && s.platform.trim() !== '');
-        const filteredLinks = links.filter(l => (l.text || l.url) && (l.text.trim() !== '' || l.url.trim() !== ''));
-        
+        const { profile, template } = this.state;
         const templateConfig = APP_CONFIG.templates[template];
-        const musicTrack = APP_CONFIG.musicTracks[music.track];
-        
-        // Platform icons mapping for export
-        const iconMap = {};
-        APP_CONFIG.socialPlatforms.forEach(platform => {
-            iconMap[platform.id] = platform.icon;
-        });
         
         return `<!DOCTYPE html>
 <html lang="en">
@@ -1323,11 +1485,6 @@ class PixelLinkBuilder {
         .linktree-container {
             width: 100%;
             max-width: 480px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 40px 24px;
             text-align: center;
             animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -1341,16 +1498,6 @@ class PixelLinkBuilder {
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-        
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin: 0 auto 24px;
-            border: 3px solid ${templateConfig.color};
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
         
         h1 {
@@ -1369,212 +1516,25 @@ class PixelLinkBuilder {
             line-height: 1.6;
         }
         
-        .social-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 40px;
-        }
-        
-        .social-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            color: #f0f0ff;
-            font-size: 20px;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .social-link:hover {
-            transform: translateY(-4px);
-            background: ${templateConfig.color};
-            color: #000;
-        }
-        
-        .links-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .link-btn {
-            display: block;
-            padding: 16px 24px;
-            background: ${templateConfig.gradient};
-            color: ${template === 'pixel' ? '#0a0a1a' : 'white'};
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border: none;
-        }
-        
-        .link-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-        
-        .music-controls {
-            margin-top: 32px;
-            padding-top: 32px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .music-toggle {
-            background: none;
-            border: none;
-            color: ${templateConfig.color};
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .music-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
-        }
-        
         footer {
             margin-top: 40px;
             font-size: 12px;
             color: rgba(255, 255, 255, 0.5);
         }
-        
-        @media (max-width: 480px) {
-            .linktree-container {
-                padding: 32px 20px;
-            }
-            
-            .avatar {
-                width: 100px;
-                height: 100px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="linktree-container">
-        ${profile.avatar ? `<img src="${profile.avatar}" alt="${profile.name || 'Profile'}" class="avatar">` : ''}
-        
         <h1>${profile.name || 'Your Name'}</h1>
         
         <div class="bio">
             ${profile.bio || 'Short bio about yourself'}
         </div>
         
-        ${filteredSocials.length > 0 ? `
-        <div class="social-links">
-            ${filteredSocials.map(social => {
-                const platform = APP_CONFIG.socialPlatforms.find(p => p.id === social.platform);
-                return `
-                    <a href="${social.url || '#'}" class="social-link" target="_blank" rel="noopener">
-                        <i class="${platform?.icon || 'fas fa-link'}"></i>
-                    </a>
-                `;
-            }).join('')}
-        </div>
-        ` : ''}
-        
-        ${filteredLinks.length > 0 ? `
-        <div class="links-container">
-            ${filteredLinks.map(link => `
-                <a href="${link.url || '#'}" class="link-btn" target="_blank" rel="noopener">
-                    ${link.text || 'Link'}
-                </a>
-            `).join('')}
-        </div>
-        ` : ''}
-        
-        ${music.enabled && musicTrack ? `
-        <div class="music-controls">
-            <button class="music-toggle" id="music-toggle" aria-label="Toggle music">
-                <i class="fas fa-play"></i>
-            </button>
-            <input type="range" id="volume-control" min="0" max="100" value="${music.volume}" 
-                   style="width: 100px; margin-left: 16px; vertical-align: middle;">
-        </div>
-        ` : ''}
-        
         <footer>
             Made with PixelLink Builder
         </footer>
     </div>
-    
-    ${music.enabled && musicTrack ? `
-    <audio id="background-music" loop preload="auto">
-        <source src="${musicTrack.url}" type="audio/mpeg">
-    </audio>
-    
-    <script>
-        const music = document.getElementById('background-music');
-        const toggleBtn = document.getElementById('music-toggle');
-        const volumeControl = document.getElementById('volume-control');
-        
-        // Set initial volume
-        music.volume = ${music.volume / 100};
-        
-        // Music toggle
-        toggleBtn.addEventListener('click', function() {
-            if (music.paused) {
-                music.play();
-                toggleBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                music.pause();
-                toggleBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        });
-        
-        // Volume control
-        volumeControl.addEventListener('input', function() {
-            music.volume = this.value / 100;
-        });
-        
-        // Try to autoplay (muted first)
-        music.muted = true;
-        const playPromise = music.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                // Autoplay started, unmute on user interaction
-                document.addEventListener('click', function unmute() {
-                    music.muted = false;
-                    toggleBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                    document.removeEventListener('click', unmute);
-                }, { once: true });
-            }).catch(() => {
-                // Autoplay was prevented
-                console.log('Autoplay prevented');
-            });
-        }
-    </script>
-    ` : ''}
-    
-    <script>
-        // Add hover effects
-        document.querySelectorAll('.social-link, .link-btn').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                this.style.transform = this.classList.contains('social-link') 
-                    ? 'translateY(-4px)' 
-                    : 'translateY(-2px)';
-            });
-            
-            btn.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-    </script>
 </body>
 </html>`;
     }
@@ -1582,15 +1542,24 @@ class PixelLinkBuilder {
     // ===== MUSIC TESTING =====
     
     async testMusic() {
+        // Fix: Check if music is NOT enabled or track is NOT selected
         if (!this.state.music.enabled || !this.state.music.track) {
             Toast.show('Please enable music and select a track first', 'warning');
             return;
         }
         
         const track = APP_CONFIG.musicTracks[this.state.music.track];
-        if (!track) return;
+        if (!track) {
+            Toast.show('No track selected', 'warning');
+            return;
+        }
         
         const audio = this.elements.testAudio;
+        if (!audio) {
+            Toast.show('Audio element not found', 'error');
+            return;
+        }
+        
         audio.src = track.url;
         audio.volume = this.state.music.volume / 100;
         
@@ -1599,14 +1568,23 @@ class PixelLinkBuilder {
             Toast.show(`Playing ${track.name}`, 'success');
             
             // Add visual feedback
-            this.elements.testMusicBtn.innerHTML = '<i class="fas fa-pause"></i><span>Playing...</span>';
-            this.elements.testMusicBtn.classList.add('btn-success');
+            const btn = this.elements.testMusicBtn;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-pause"></i> Stop Test';
+            btn.classList.add('btn-success');
             
-            // Reset button after track ends
+            // Reset button when audio ends
             audio.onended = () => {
-                this.elements.testMusicBtn.innerHTML = '<i class="fas fa-play"></i><span>Test Music</span>';
-                this.elements.testMusicBtn.classList.remove('btn-success');
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
             };
+            
+            // Also reset on pause
+            audio.onpause = () => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+            };
+            
         } catch (error) {
             console.error('Music playback failed:', error);
             Toast.show('Click anywhere on page first, then try again', 'error');
@@ -1625,37 +1603,57 @@ class PixelLinkBuilder {
         this.state.reset();
         
         // Reset form fields
-        this.elements.nameInput.value = '';
-        this.elements.bioInput.value = '';
-        this.elements.avatarUrl.value = '';
-        this.elements.avatarUpload.value = '';
+        if (this.elements.nameInput) this.elements.nameInput.value = '';
+        if (this.elements.bioInput) this.elements.bioInput.value = '';
+        if (this.elements.avatarUrl) this.elements.avatarUrl.value = '';
+        
+        // Reset avatar upload
+        if (this.elements.avatarUploadInput) this.elements.avatarUploadInput.value = '';
+        if (this.elements.previewUpload) this.elements.previewUpload.classList.add('hidden');
+        if (this.elements.uploadArea) this.elements.uploadArea.style.display = 'block';
+        
+        // Reset avatar tabs
+        this.handleAvatarTabSwitch('url');
         
         // Reset template
-        this.elements.templateOptions.forEach(opt => {
-            opt.classList.remove('selected');
-        });
-        document.querySelector('.template-option[data-template="pixel"]').classList.add('selected');
+        if (this.elements.templateOptions) {
+            this.elements.templateOptions.forEach(opt => {
+                opt.classList.remove('active');
+            });
+            const pixelTemplate = document.querySelector('.template-option[data-template="pixel"]');
+            if (pixelTemplate) pixelTemplate.classList.add('active');
+        }
         
         // Reset music
-        this.elements.musicToggle.checked = false;
-        this.elements.musicOptions.classList.add('hidden');
-        this.elements.musicSelect.value = '';
-        this.elements.volumeSlider.value = '50';
-        this.elements.volumeValue.textContent = '50%';
+        if (this.elements.musicToggle) this.elements.musicToggle.checked = false;
+        if (this.elements.musicOptions) this.elements.musicOptions.classList.add('hidden');
+        if (this.elements.musicSelect) this.elements.musicSelect.value = '';
+        if (this.elements.volumeSlider) this.elements.volumeSlider.value = '50';
+        if (this.elements.volumeValue) this.elements.volumeValue.textContent = '50%';
         
         // Reset device
-        this.elements.deviceTabs.forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelector('.device-tab[data-device="desktop"]').classList.add('active');
-        this.elements.deviceScreen.className = 'device-screen desktop';
+        if (this.elements.previewModeBtns) {
+            this.elements.previewModeBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const desktopBtn = document.querySelector('.preview-mode-btn[data-mode="desktop"]');
+            if (desktopBtn) desktopBtn.classList.add('active');
+        }
+        
+        if (this.elements.previewWrapper) {
+            this.elements.previewWrapper.classList.remove('desktop', 'mobile');
+            this.elements.previewWrapper.classList.add('desktop');
+        }
         
         // Clear dynamic items
         this.loadDynamicItems();
         
         // Stop music
-        this.elements.testAudio.pause();
-        this.elements.testAudio.currentTime = 0;
+        if (this.elements.testAudio) {
+            this.elements.testAudio.pause();
+            this.elements.testAudio.currentTime = 0;
+            this.elements.testAudio.src = '';
+        }
         
         // Update preview
         await this.updatePreview();
