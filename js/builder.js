@@ -1,636 +1,1301 @@
-// Main Builder Application
-document.addEventListener('DOMContentLoaded', function() {
-    // Hide loading screen
-    setTimeout(() => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('main-container').style.display = 'block';
-    }, 500);
-    
-    // Initialize application
-    initApp();
-    
-    // Initialize Linktree Builder
-    Linktree.init({
-        container: '#preview-wrapper',
-        template: 'pixel',
-        musicEnabled: false,
-        onUpdate: updatePreview
-    });
-});
+// =============================================
+// PIXELLINK BUILDER - Apple-Raycast Style
+// Main Application Controller
+// =============================================
 
-// Application State
-const appState = {
-    profile: {
-        name: '',
-        bio: '',
-        avatar: '',
-        avatarType: 'url' // 'url' or 'upload'
+// ===== APP CONFIGURATION =====
+const APP_CONFIG = {
+    version: '2.0.0',
+    name: 'PixelLink Builder',
+    localStorageKey: 'pixellink_apple_v2',
+    previewUpdateDelay: 300,
+    animations: {
+        duration: {
+            fast: 150,
+            normal: 250,
+            slow: 350,
+            slower: 500
+        },
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
     },
-    template: 'pixel',
-    music: {
-        enabled: false,
-        track: '',
-        volume: 50
+    templates: {
+        pixel: {
+            name: 'Pixel Art',
+            color: '#00ff9d',
+            gradient: 'linear-gradient(135deg, #00ff9d, #00b8ff)'
+        },
+        cyber: {
+            name: 'Cyber Neon',
+            color: '#ff00ff',
+            gradient: 'linear-gradient(135deg, #ff00ff, #00f3ff)'
+        },
+        dark: {
+            name: 'Dark Futuristic',
+            color: '#0033ff',
+            gradient: 'linear-gradient(135deg, #0033ff, #9c6ce9)'
+        }
     },
-    socials: [],
-    links: [],
-    settings: {
-        previewMode: 'desktop'
-    }
+    musicTracks: {
+        cyber: {
+            name: 'Cyber Synth',
+            url: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
+            icon: 'fas fa-bolt'
+        },
+        ambient: {
+            name: 'Futuristic Ambient',
+            url: 'https://assets.mixkit.co/music/preview/mixkit-deep-urban-623.mp3',
+            icon: 'fas fa-moon'
+        },
+        chill: {
+            name: 'Chill Beats',
+            url: 'https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-667.mp3',
+            icon: 'fas fa-gamepad'
+        }
+    },
+    socialPlatforms: [
+        { id: 'github', name: 'GitHub', icon: 'fab fa-github', color: '#333' },
+        { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', color: '#E1306C' },
+        { id: 'twitter', name: 'Twitter / X', icon: 'fab fa-twitter', color: '#1DA1F2' },
+        { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: '#FF0000' },
+        { id: 'linkedin', name: 'LinkedIn', icon: 'fab fa-linkedin', color: '#0077B5' },
+        { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', color: '#000000' },
+        { id: 'whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', color: '#25D366' },
+        { id: 'telegram', name: 'Telegram', icon: 'fab fa-telegram', color: '#0088CC' },
+        { id: 'discord', name: 'Discord', icon: 'fab fa-discord', color: '#5865F2' },
+        { id: 'spotify', name: 'Spotify', icon: 'fab fa-spotify', color: '#1DB954' },
+        { id: 'facebook', name: 'Facebook', icon: 'fab fa-facebook', color: '#1877F2' },
+        { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', color: '#9146FF' },
+        { id: 'dribbble', name: 'Dribbble', icon: 'fab fa-dribbble', color: '#EA4C89' },
+        { id: 'behance', name: 'Behance', icon: 'fab fa-behance', color: '#1769FF' },
+        { id: 'reddit', name: 'Reddit', icon: 'fab fa-reddit', color: '#FF4500' }
+    ]
 };
 
-// Initialize Application
-function initApp() {
-    // Load saved data from localStorage
-    loadFromLocalStorage();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Initial preview update
-    updatePreview();
+// ===== APP STATE MANAGEMENT =====
+class AppState {
+    constructor() {
+        this.profile = {
+            name: '',
+            bio: '',
+            avatar: '',
+            avatarType: 'url'
+        };
+        this.template = 'pixel';
+        this.socials = [];
+        this.links = [];
+        this.music = {
+            enabled: false,
+            track: '',
+            volume: 50
+        };
+        this.preview = {
+            device: 'desktop',
+            isLoading: false
+        };
+        this.ui = {
+            toastQueue: [],
+            tooltipVisible: false
+        };
+    }
+
+    // Save to localStorage
+    save() {
+        try {
+            const data = {
+                profile: this.profile,
+                template: this.template,
+                socials: this.socials.filter(s => s.platform && s.platform.trim() !== ''),
+                links: this.links.filter(l => (l.text || l.url) && (l.text.trim() !== '' || l.url.trim() !== '')),
+                music: this.music,
+                preview: this.preview,
+                version: APP_CONFIG.version
+            };
+            localStorage.setItem(APP_CONFIG.localStorageKey, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.error('Failed to save state:', error);
+            return false;
+        }
+    }
+
+    // Load from localStorage
+    load() {
+        try {
+            const saved = localStorage.getItem(APP_CONFIG.localStorageKey);
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // Merge with current state
+                Object.assign(this.profile, data.profile || {});
+                this.template = data.template || 'pixel';
+                this.socials = data.socials || [];
+                this.links = data.links || [];
+                Object.assign(this.music, data.music || {});
+                Object.assign(this.preview, data.preview || {});
+                
+                return true;
+            }
+        } catch (error) {
+            console.error('Failed to load state:', error);
+        }
+        return false;
+    }
+
+    // Reset to defaults
+    reset() {
+        this.profile = { name: '', bio: '', avatar: '', avatarType: 'url' };
+        this.template = 'pixel';
+        this.socials = [];
+        this.links = [];
+        this.music = { enabled: false, track: '', volume: 50 };
+        this.preview = { device: 'desktop', isLoading: false };
+        localStorage.removeItem(APP_CONFIG.localStorageKey);
+        return true;
+    }
 }
 
-// Event Listeners Setup
-function setupEventListeners() {
-    // Profile inputs
-    document.getElementById('name').addEventListener('input', function() {
-        appState.profile.name = this.value;
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    document.getElementById('bio').addEventListener('input', function() {
-        appState.profile.bio = this.value;
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    document.getElementById('avatar').addEventListener('input', function() {
-        if (appState.profile.avatarType === 'url') {
-            appState.profile.avatar = this.value;
-            saveToLocalStorage();
-            updatePreview();
-        }
-    });
-    
-    // Avatar option tabs
-    document.querySelectorAll('.option-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const option = this.dataset.option;
+// ===== ANIMATION CONTROLLER =====
+class AnimationController {
+    static animate(element, animation, duration = 300) {
+        return new Promise((resolve) => {
+            element.style.animation = `${animation} ${duration}ms ${APP_CONFIG.animations.easing}`;
             
-            // Update UI
-            document.querySelectorAll('.option-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            document.querySelectorAll('.option-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`avatar-${option}`).classList.remove('hidden');
-            
-            // Update state
-            appState.profile.avatarType = option;
-            
-            // Clear avatar if switching
-            if (option === 'url') {
-                document.getElementById('avatar').value = appState.profile.avatar || '';
-                document.getElementById('avatar-upload-input').value = '';
-                document.getElementById('preview-upload').classList.add('hidden');
-            } else {
-                appState.profile.avatar = '';
-                document.getElementById('avatar').value = '';
-            }
-            
-            saveToLocalStorage();
-            updatePreview();
+            setTimeout(() => {
+                element.style.animation = '';
+                resolve();
+            }, duration);
         });
-    });
+    }
+
+    static spring(element, property, from, to) {
+        return new Promise((resolve) => {
+            const startTime = performance.now();
+            const duration = 500;
+            
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Spring easing function
+                const springProgress = 1 - Math.cos(progress * Math.PI * 2.5) * Math.exp(-progress * 5);
+                
+                const value = from + (to - from) * springProgress;
+                element.style[property] = `${value}px`;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    resolve();
+                }
+            };
+            
+            requestAnimationFrame(animate);
+        });
+    }
+
+    static stagger(selector, animation, staggerDelay = 50, duration = 300) {
+        const elements = document.querySelectorAll(selector);
+        const promises = [];
+        
+        elements.forEach((element, index) => {
+            setTimeout(() => {
+                promises.push(this.animate(element, animation, duration));
+            }, index * staggerDelay);
+        });
+        
+        return Promise.all(promises);
+    }
+
+    static crossfade(outElement, inElement, duration = 400) {
+        return new Promise((resolve) => {
+            outElement.style.opacity = '0.5';
+            outElement.style.filter = 'blur(2px)';
+            
+            setTimeout(() => {
+                outElement.style.display = 'none';
+                inElement.style.display = 'block';
+                inElement.style.opacity = '0';
+                inElement.style.filter = 'blur(2px)';
+                
+                setTimeout(() => {
+                    inElement.style.opacity = '1';
+                    inElement.style.filter = 'blur(0)';
+                    resolve();
+                }, 20);
+            }, duration / 2);
+        });
+    }
+}
+
+// ===== UI COMPONENTS =====
+class Toast {
+    static show(message, type = 'info', duration = 3000) {
+        const container = document.getElementById('toast-container') || this.createContainer();
+        const toast = document.createElement('div');
+        
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <i class="${icons[type]}"></i>
+            <span>${message}</span>
+        `;
+        
+        // Add spring animation
+        toast.style.transform = 'translateX(100%)';
+        container.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
+        }, 10);
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, APP_CONFIG.animations.duration.normal);
+        }, duration);
+        
+        return toast;
+    }
     
-    // Avatar upload
-    const uploadInput = document.getElementById('avatar-upload-input');
-    const uploadArea = document.getElementById('upload-area');
-    const previewUpload = document.getElementById('preview-upload');
-    const uploadedImage = document.getElementById('uploaded-image');
-    const removeUpload = document.getElementById('remove-upload');
+    static createContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        return container;
+    }
+}
+
+class Tooltip {
+    static show(text, element) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = text;
+        
+        document.body.appendChild(tooltip);
+        
+        const rect = element.getBoundingClientRect();
+        const tooltipHeight = tooltip.offsetHeight;
+        const tooltipWidth = tooltip.offsetWidth;
+        
+        // Position above element
+        let top = rect.top - tooltipHeight - 8;
+        let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+        
+        // Adjust if tooltip would go off screen
+        if (top < 10) top = rect.bottom + 8;
+        if (left < 10) left = 10;
+        if (left + tooltipWidth > window.innerWidth - 10) {
+            left = window.innerWidth - tooltipWidth - 10;
+        }
+        
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.opacity = '0';
+        tooltip.style.transform = 'scale(0.95) translateY(4px)';
+        
+        // Animate in
+        setTimeout(() => {
+            tooltip.style.transition = `all ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
+            tooltip.style.opacity = '1';
+            tooltip.style.transform = 'scale(1) translateY(0)';
+        }, 10);
+        
+        return tooltip;
+    }
     
-    uploadArea.addEventListener('click', () => uploadInput.click());
+    static hide(tooltip) {
+        if (tooltip && tooltip.parentNode) {
+            tooltip.style.opacity = '0';
+            tooltip.style.transform = 'scale(0.95) translateY(4px)';
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            }, APP_CONFIG.animations.duration.normal);
+        }
+    }
+}
+
+// ===== MAIN APPLICATION =====
+class PixelLinkBuilder {
+    constructor() {
+        this.state = new AppState();
+        this.elements = {};
+        this.currentTooltip = null;
+        this.isInitialized = false;
+    }
     
-    uploadInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
+    // Initialize application
+    async init() {
+        console.log('🚀 Initializing PixelLink Builder...');
+        
+        // Cache DOM elements
+        this.cacheElements();
+        
+        // Load saved state
+        this.state.load();
+        
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Initialize UI
+        await this.initUI();
+        
+        // Initial preview
+        this.updatePreview();
+        
+        this.isInitialized = true;
+        console.log('✅ PixelLink Builder ready!');
+        
+        // Show welcome message
+        setTimeout(() => {
+            Toast.show('Welcome to PixelLink Builder!', 'info');
+        }, 1000);
+    }
+    
+    // Cache DOM elements
+    cacheElements() {
+        this.elements = {
+            // Profile
+            nameInput: document.getElementById('name-input'),
+            bioInput: document.getElementById('bio-input'),
+            avatarUrl: document.getElementById('avatar-url'),
+            avatarUpload: document.getElementById('avatar-upload'),
+            clearAvatar: document.getElementById('clear-avatar'),
+            
+            // Template
+            templateOptions: document.querySelectorAll('.template-option'),
+            
+            // Music
+            musicToggle: document.getElementById('music-toggle'),
+            musicOptions: document.getElementById('music-options'),
+            musicSelect: document.getElementById('music-select'),
+            volumeSlider: document.getElementById('volume-slider'),
+            volumeValue: document.getElementById('volume-value'),
+            testMusicBtn: document.getElementById('test-music-btn'),
+            
+            // Social Links
+            socialsList: document.getElementById('socials-list'),
+            addSocialBtn: document.getElementById('add-social-btn'),
+            
+            // Custom Links
+            linksList: document.getElementById('links-list'),
+            addLinkBtn: document.getElementById('add-link-btn'),
+            
+            // Preview
+            deviceTabs: document.querySelectorAll('.device-tab'),
+            deviceScreen: document.getElementById('device-screen'),
+            previewContent: document.getElementById('preview-content'),
+            skeletonLoader: document.getElementById('skeleton-loader'),
+            
+            // Export
+            copyBtn: document.getElementById('copy-html-btn'),
+            downloadBtn: document.getElementById('download-btn'),
+            exportBtn: document.getElementById('export-btn'),
+            
+            // Actions
+            resetBtn: document.getElementById('reset-btn'),
+            
+            // Audio
+            testAudio: document.getElementById('test-audio')
+        };
+    }
+    
+    // Initialize UI components
+    async initUI() {
+        // Animate container entrance
+        await AnimationController.animate(
+            document.querySelector('.app-container'),
+            'containerEnter',
+            APP_CONFIG.animations.duration.slower
+        );
+        
+        // Stagger form groups
+        await AnimationController.stagger(
+            '.form-group',
+            'fadeSlideUp',
+            50,
+            APP_CONFIG.animations.duration.normal
+        );
+        
+        // Update form fields from state
+        this.updateFormFromState();
+        
+        // Setup tooltips
+        this.setupTooltips();
+    }
+    
+    // Update form fields from state
+    updateFormFromState() {
+        const { profile, template, music, preview } = this.state;
+        const el = this.elements;
+        
+        // Profile
+        if (el.nameInput) el.nameInput.value = profile.name || '';
+        if (el.bioInput) el.bioInput.value = profile.bio || '';
+        if (el.avatarUrl) el.avatarUrl.value = profile.avatarType === 'url' ? profile.avatar || '' : '';
+        
+        // Template
+        if (el.templateOptions) {
+            el.templateOptions.forEach(option => {
+                option.classList.toggle('selected', option.dataset.template === template);
+            });
+        }
+        
+        // Music
+        if (el.musicToggle) el.musicToggle.checked = music.enabled;
+        if (el.musicSelect) el.musicSelect.value = music.track || '';
+        if (el.volumeSlider) el.volumeSlider.value = music.volume;
+        if (el.volumeValue) el.volumeValue.textContent = `${music.volume}%`;
+        
+        if (music.enabled && el.musicOptions) {
+            el.musicOptions.classList.remove('hidden');
+        }
+        
+        // Preview device
+        if (el.deviceTabs) {
+            el.deviceTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.device === preview.device);
+            });
+        }
+        
+        if (el.deviceScreen) {
+            el.deviceScreen.className = 'device-screen';
+            el.deviceScreen.classList.add(preview.device);
+        }
+        
+        // Load dynamic items
+        this.loadDynamicItems();
+    }
+    
+    // Setup event listeners
+    setupEventListeners() {
+        const el = this.elements;
+        
+        // Profile inputs
+        el.nameInput?.addEventListener('input', this.debounce((e) => {
+            this.state.profile.name = e.target.value;
+            this.state.save();
+            this.updatePreview();
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        el.bioInput?.addEventListener('input', this.debounce((e) => {
+            this.state.profile.bio = e.target.value;
+            this.state.save();
+            this.updatePreview();
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        el.avatarUrl?.addEventListener('input', this.debounce((e) => {
+            if (this.state.profile.avatarType === 'url') {
+                this.state.profile.avatar = e.target.value;
+                this.state.save();
+                this.updatePreview();
+            }
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        el.avatarUpload?.addEventListener('change', (e) => this.handleAvatarUpload(e));
+        el.clearAvatar?.addEventListener('click', () => this.clearAvatar());
+        
+        // Template selection
+        el.templateOptions?.forEach(option => {
+            option.addEventListener('click', () => this.handleTemplateSelect(option));
+        });
+        
+        // Music controls
+        el.musicToggle?.addEventListener('change', (e) => this.handleMusicToggle(e));
+        el.musicSelect?.addEventListener('change', (e) => this.handleMusicSelect(e));
+        el.volumeSlider?.addEventListener('input', (e) => this.handleVolumeChange(e));
+        el.testMusicBtn?.addEventListener('click', () => this.testMusic());
+        
+        // Device tabs
+        el.deviceTabs?.forEach(tab => {
+            tab.addEventListener('click', () => this.handleDeviceSwitch(tab));
+        });
+        
+        // Social links
+        el.addSocialBtn?.addEventListener('click', () => this.addSocialItem());
+        
+        // Custom links
+        el.addLinkBtn?.addEventListener('click', () => this.addLinkItem());
+        
+        // Export buttons
+        el.copyBtn?.addEventListener('click', () => this.copyHTML());
+        el.downloadBtn?.addEventListener('click', () => this.downloadHTML());
+        el.exportBtn?.addEventListener('click', () => this.downloadHTML());
+        
+        // Reset button
+        el.resetBtn?.addEventListener('click', () => this.resetAll());
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+        
+        // Prevent form submission
+        document.addEventListener('submit', (e) => e.preventDefault());
+    }
+    
+    // Setup tooltips
+    setupTooltips() {
+        const tooltipElements = document.querySelectorAll('[data-tooltip]');
+        
+        tooltipElements.forEach(element => {
+            element.addEventListener('mouseenter', (e) => {
+                const text = e.target.dataset.tooltip;
+                this.currentTooltip = Tooltip.show(text, e.target);
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                if (this.currentTooltip) {
+                    Tooltip.hide(this.currentTooltip);
+                    this.currentTooltip = null;
+                }
+            });
+        });
+    }
+    
+    // ===== EVENT HANDLERS =====
+    
+    // Avatar upload handler
+    async handleAvatarUpload(event) {
+        const file = event.target.files[0];
         if (!file) return;
         
         if (file.size > 2 * 1024 * 1024) {
-            alert('File size must be less than 2MB');
+            Toast.show('File size must be less than 2MB', 'error');
             return;
         }
         
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const base64 = event.target.result;
-            appState.profile.avatar = base64;
-            uploadedImage.src = base64;
-            previewUpload.classList.remove('hidden');
-            saveToLocalStorage();
-            updatePreview();
-        };
-        reader.readAsDataURL(file);
-    });
-    
-    removeUpload.addEventListener('click', function() {
-        appState.profile.avatar = '';
-        uploadInput.value = '';
-        previewUpload.classList.add('hidden');
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    // Template selection
-    document.querySelectorAll('.template-option').forEach(option => {
-        option.addEventListener('click', function() {
-            const template = this.dataset.template;
+        try {
+            const base64 = await this.readFileAsDataURL(file);
+            this.state.profile.avatar = base64;
+            this.state.profile.avatarType = 'upload';
+            this.state.save();
             
-            // Update UI
-            document.querySelectorAll('.template-option').forEach(o => o.classList.remove('active'));
-            this.classList.add('active');
+            // Update preview
+            this.updatePreview();
+            
+            // Show success
+            Toast.show('Avatar uploaded successfully', 'success');
+            
+            // Add spring animation to avatar preview
+            const previewImg = document.querySelector('.avatar-preview img');
+            if (previewImg) {
+                previewImg.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    previewImg.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
+                    previewImg.style.transform = 'scale(1)';
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Avatar upload failed:', error);
+            Toast.show('Failed to upload avatar', 'error');
+        }
+    }
+    
+    // Clear avatar
+    clearAvatar() {
+        this.state.profile.avatar = '';
+        this.state.profile.avatarType = 'url';
+        this.elements.avatarUrl.value = '';
+        this.elements.avatarUpload.value = '';
+        this.state.save();
+        this.updatePreview();
+        Toast.show('Avatar cleared', 'info');
+    }
+    
+    // Template selection handler
+    async handleTemplateSelect(option) {
+        const template = option.dataset.template;
+        
+        // Update UI with animation
+        this.elements.templateOptions.forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        
+        // Spring animation on selected template
+        await AnimationController.animate(
+            option,
+            'fadeSlideUp',
+            APP_CONFIG.animations.duration.normal
+        );
+        
+        // Update state and preview with crossfade
+        this.state.template = template;
+        this.state.save();
+        await this.updatePreviewWithTransition();
+    }
+    
+    // Music toggle handler
+    handleMusicToggle(event) {
+        const enabled = event.target.checked;
+        this.state.music.enabled = enabled;
+        
+        if (enabled) {
+            this.elements.musicOptions.classList.remove('hidden');
+            AnimationController.animate(
+                this.elements.musicOptions,
+                'fadeSlideUp',
+                APP_CONFIG.animations.duration.normal
+            );
+        } else {
+            this.elements.musicOptions.classList.add('hidden');
+        }
+        
+        this.state.save();
+        this.updatePreview();
+    }
+    
+    // Music select handler
+    handleMusicSelect(event) {
+        this.state.music.track = event.target.value;
+        this.state.save();
+        this.updatePreview();
+    }
+    
+    // Volume change handler
+    handleVolumeChange(event) {
+        const value = parseInt(event.target.value);
+        this.state.music.volume = value;
+        this.elements.volumeValue.textContent = `${value}%`;
+        this.state.save();
+        this.updatePreview();
+    }
+    
+    // Device switch handler
+    async handleDeviceSwitch(tab) {
+        const device = tab.dataset.device;
+        
+        // Update UI
+        this.elements.deviceTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Spring animation on tab
+        await AnimationController.animate(
+            tab,
+            'fadeSlideUp',
+            APP_CONFIG.animations.duration.fast
+        );
+        
+        // Update device screen with morph animation
+        this.state.preview.device = device;
+        
+        // Add scale animation
+        this.elements.deviceScreen.style.transform = 'scale(0.98)';
+        this.elements.deviceScreen.classList.remove('desktop', 'mobile');
+        this.elements.deviceScreen.classList.add(device);
+        
+        setTimeout(() => {
+            this.elements.deviceScreen.style.transition = `transform ${APP_CONFIG.animations.duration.normal}ms ${APP_CONFIG.animations.easing}`;
+            this.elements.deviceScreen.style.transform = 'scale(1)';
+        }, 10);
+        
+        this.state.save();
+    }
+    
+    // ===== DYNAMIC ITEMS MANAGEMENT =====
+    
+    // Load dynamic items from state
+    loadDynamicItems() {
+        // Clear existing items
+        while (this.elements.socialsList.firstChild) {
+            this.elements.socialsList.removeChild(this.elements.socialsList.firstChild);
+        }
+        while (this.elements.linksList.firstChild) {
+            this.elements.linksList.removeChild(this.elements.linksList.firstChild);
+        }
+        
+        // Add social items
+        if (this.state.socials.length > 0) {
+            this.state.socials.forEach(social => {
+                this.addSocialItem(social);
+            });
+        } else {
+            this.addSocialItem();
+        }
+        
+        // Add link items
+        if (this.state.links.length > 0) {
+            this.state.links.forEach(link => {
+                this.addLinkItem(link);
+            });
+        } else {
+            this.addLinkItem();
+        }
+    }
+    
+    // Add social item
+    addSocialItem(data = null) {
+        const container = this.elements.socialsList;
+        const index = container.children.length;
+        
+        const item = document.createElement('div');
+        item.className = 'dynamic-item';
+        item.dataset.index = index;
+        
+        const platforms = APP_CONFIG.socialPlatforms.map(p => 
+            `<option value="${p.id}">${p.name}</option>`
+        ).join('');
+        
+        item.innerHTML = `
+            <div class="dynamic-item-header">
+                <div class="input-wrapper flex-1">
+                    <select class="input-field select-field social-platform" data-tooltip="Select social platform">
+                        <option value="">Select Platform</option>
+                        ${platforms}
+                    </select>
+                </div>
+                <button class="btn btn-icon remove-btn" data-tooltip="Remove this link">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" class="input-field social-url" 
+                       placeholder="https://example.com/username"
+                       data-tooltip="Enter your profile URL">
+            </div>
+        `;
+        
+        container.appendChild(item);
+        
+        // Set data if provided
+        if (data) {
+            item.querySelector('.social-platform').value = data.platform || '';
+            item.querySelector('.social-url').value = data.url || '';
+        }
+        
+        // Add event listeners
+        const platformSelect = item.querySelector('.social-platform');
+        const urlInput = item.querySelector('.social-url');
+        const removeBtn = item.querySelector('.remove-btn');
+        
+        platformSelect.addEventListener('change', () => {
+            this.updateSocialItem(index, platformSelect.value, urlInput.value);
+        });
+        
+        urlInput.addEventListener('input', this.debounce(() => {
+            this.updateSocialItem(index, platformSelect.value, urlInput.value);
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        removeBtn.addEventListener('click', () => {
+            this.removeSocialItem(index);
+        });
+        
+        // Animate in with spring effect
+        AnimationController.animate(item, 'slideIn', APP_CONFIG.animations.duration.normal);
+        
+        // Update state
+        if (data) {
+            this.state.socials[index] = data;
+        } else {
+            this.state.socials[index] = { platform: '', url: '' };
+        }
+        
+        this.state.save();
+        this.updatePreview();
+        
+        // Scroll to new item with smooth behavior
+        setTimeout(() => {
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+        
+        return item;
+    }
+    
+    // Update social item
+    updateSocialItem(index, platform, url) {
+        if (!this.state.socials[index]) {
+            this.state.socials[index] = { platform: '', url: '' };
+        }
+        
+        this.state.socials[index].platform = platform || '';
+        this.state.socials[index].url = url || '';
+        this.state.save();
+        this.updatePreview();
+    }
+    
+    // Remove social item
+    async removeSocialItem(index) {
+        const item = document.querySelector(`#socials-list .dynamic-item[data-index="${index}"]`);
+        
+        if (item && this.state.socials.length > 1) {
+            // Animate out
+            item.classList.add('removing');
+            
+            await AnimationController.animate(
+                item,
+                'slideOut',
+                APP_CONFIG.animations.duration.normal
+            );
+            
+            item.remove();
+            
+            // Update indices
+            document.querySelectorAll('#socials-list .dynamic-item').forEach((el, i) => {
+                el.dataset.index = i;
+            });
             
             // Update state
-            appState.template = template;
+            this.state.socials.splice(index, 1);
+            this.state.save();
+            this.updatePreview();
             
-            // Update Linktree instance
-            Linktree.setTemplate(template);
-            
-            saveToLocalStorage();
-            updatePreview();
-        });
-    });
-    
-    // Music controls
-    const musicEnabled = document.getElementById('music-enabled');
-    const musicOptions = document.getElementById('music-options');
-    const musicSelect = document.getElementById('music-select');
-    const volumeSlider = document.getElementById('volume');
-    const volumeValue = document.getElementById('volume-value');
-    const testMusicBtn = document.getElementById('test-music');
-    
-    musicEnabled.addEventListener('change', function() {
-        appState.music.enabled = this.checked;
-        
-        if (this.checked) {
-            musicOptions.classList.remove('hidden');
+            Toast.show('Social link removed', 'info');
         } else {
-            musicOptions.classList.add('hidden');
-        }
-        
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    musicSelect.addEventListener('change', function() {
-        appState.music.track = this.value;
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    volumeSlider.addEventListener('input', function() {
-        const value = this.value;
-        appState.music.volume = parseInt(value);
-        volumeValue.textContent = `${value}%`;
-        saveToLocalStorage();
-        updatePreview();
-    });
-    
-    testMusicBtn.addEventListener('click', function() {
-        if (!appState.music.enabled || !appState.music.track) {
-            alert('Please enable music and select a track first');
-            return;
-        }
-        
-        // Get audio URL based on track
-        let audioUrl = '';
-        switch(appState.music.track) {
-            case 'cyber':
-                audioUrl = 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3';
-                break;
-            case 'futuristic':
-                audioUrl = 'https://assets.mixkit.co/music/preview/mixkit-deep-urban-623.mp3';
-                break;
-            case 'pixel':
-                audioUrl = 'https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-667.mp3';
-                break;
-        }
-        
-        if (audioUrl) {
-            const audio = document.getElementById('test-audio');
-            audio.src = audioUrl;
-            audio.volume = appState.music.volume / 100;
-            audio.play().catch(e => {
-                console.log('Audio play failed:', e);
-                alert('Please click "Enable Sound" button first, or your browser may block autoplay.');
-            });
-        }
-    });
-    
-    // Social links
-    const socialsContainer = document.getElementById('socials-container');
-    const addSocialBtn = document.getElementById('add-social');
-    
-    addSocialBtn.addEventListener('click', addSocialItem);
-    
-    // Initial social item
-    addSocialItem();
-    
-    // Custom links
-    const linksContainer = document.getElementById('links-container');
-    const addLinkBtn = document.getElementById('add-link');
-    
-    addLinkBtn.addEventListener('click', addLinkItem);
-    
-    // Initial link item
-    addLinkItem();
-    
-    // Preview controls
-    document.querySelectorAll('.preview-mode-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const mode = this.dataset.mode;
-            
-            // Update UI
-            document.querySelectorAll('.preview-mode-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update preview wrapper
-            const wrapper = document.getElementById('preview-wrapper');
-            wrapper.className = 'preview-wrapper';
-            if (mode === 'mobile') {
-                wrapper.classList.add('mobile');
+            // Shake animation for last item
+            if (item) {
+                await AnimationController.animate(item, 'shake', APP_CONFIG.animations.duration.fast);
+                Toast.show('At least one social link is required', 'warning');
             }
-            
-            appState.settings.previewMode = mode;
-            saveToLocalStorage();
+        }
+    }
+    
+    // Add link item
+    addLinkItem(data = null) {
+        const container = this.elements.linksList;
+        const index = container.children.length;
+        
+        const item = document.createElement('div');
+        item.className = 'dynamic-item';
+        item.dataset.index = index;
+        
+        item.innerHTML = `
+            <div class="dynamic-item-header">
+                <div class="input-wrapper flex-1">
+                    <input type="text" class="input-field link-text" 
+                           placeholder="Link text (e.g., Portfolio)"
+                           data-tooltip="Enter link display text">
+                </div>
+                <button class="btn btn-icon remove-btn" data-tooltip="Remove this link">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" class="input-field link-url" 
+                       placeholder="https://example.com"
+                       data-tooltip="Enter destination URL">
+            </div>
+        `;
+        
+        container.appendChild(item);
+        
+        // Set data if provided
+        if (data) {
+            item.querySelector('.link-text').value = data.text || '';
+            item.querySelector('.link-url').value = data.url || '';
+        }
+        
+        // Add event listeners
+        const textInput = item.querySelector('.link-text');
+        const urlInput = item.querySelector('.link-url');
+        const removeBtn = item.querySelector('.remove-btn');
+        
+        textInput.addEventListener('input', this.debounce(() => {
+            this.updateLinkItem(index, textInput.value, urlInput.value);
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        urlInput.addEventListener('input', this.debounce(() => {
+            this.updateLinkItem(index, textInput.value, urlInput.value);
+        }, APP_CONFIG.previewUpdateDelay));
+        
+        removeBtn.addEventListener('click', () => {
+            this.removeLinkItem(index);
         });
-    });
-    
-    document.getElementById('refresh-preview').addEventListener('click', updatePreview);
-    
-    // Export buttons
-    document.getElementById('copy-html').addEventListener('click', copyHTML);
-    document.getElementById('download-html').addEventListener('click', downloadHTML);
-    document.getElementById('preview-full').addEventListener('click', previewFullscreen);
-    document.getElementById('preview-btn').addEventListener('click', previewFullscreen);
-    
-    // Reset button
-    document.getElementById('reset-all').addEventListener('click', resetAll);
-}
-
-// Social Links Management
-function addSocialItem(index = null) {
-    const container = document.getElementById('socials-container');
-    
-    if (index === null) {
-        index = container.children.length;
-    }
-    
-    const socialItem = document.createElement('div');
-    socialItem.className = 'social-item';
-    socialItem.dataset.index = index;
-    
-    socialItem.innerHTML = `
-        <div class="social-header">
-            <select class="pixel-input social-platform">
-                <option value="">Select Platform</option>
-                <option value="github">GitHub</option>
-                <option value="instagram">Instagram</option>
-                <option value="twitter">Twitter / X</option>
-                <option value="youtube">YouTube</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="tiktok">TikTok</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="telegram">Telegram</option>
-                <option value="discord">Discord</option>
-                <option value="spotify">Spotify</option>
-                <option value="facebook">Facebook</option>
-                <option value="twitch">Twitch</option>
-            </select>
-            <button type="button" class="btn-icon remove-social">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <input type="text" class="pixel-input social-url" placeholder="https://example.com/username">
-    `;
-    
-    container.appendChild(socialItem);
-    
-    // Add event listeners for new item
-    const platformSelect = socialItem.querySelector('.social-platform');
-    const urlInput = socialItem.querySelector('.social-url');
-    const removeBtn = socialItem.querySelector('.remove-social');
-    
-    platformSelect.addEventListener('change', function() {
-        updateSocialItem(index, platformSelect.value, urlInput.value);
-    });
-    
-    urlInput.addEventListener('input', function() {
-        updateSocialItem(index, platformSelect.value, urlInput.value);
-    });
-    
-    removeBtn.addEventListener('click', function() {
-        if (container.children.length > 1) {
-            socialItem.remove();
-            updateSocialsArray();
-            updatePreview();
-        }
-    });
-    
-    // Initialize from state if available
-    if (appState.socials[index]) {
-        platformSelect.value = appState.socials[index].platform;
-        urlInput.value = appState.socials[index].url || '';
-    }
-    
-    updateSocialItem(index, platformSelect.value, urlInput.value);
-}
-
-function updateSocialItem(index, platform, url) {
-    if (!platform) return;
-    
-    appState.socials[index] = {
-        platform: platform,
-        url: url || ''
-    };
-    
-    saveToLocalStorage();
-    updatePreview();
-}
-
-function updateSocialsArray() {
-    const socialItems = document.querySelectorAll('.social-item');
-    appState.socials = [];
-    
-    socialItems.forEach((item, index) => {
-        const platform = item.querySelector('.social-platform').value;
-        const url = item.querySelector('.social-url').value;
         
-        if (platform) {
-            appState.socials[index] = {
-                platform: platform,
-                url: url || ''
-            };
-        }
-    });
-}
-
-// Custom Links Management
-function addLinkItem(index = null) {
-    const container = document.getElementById('links-container');
-    
-    if (index === null) {
-        index = container.children.length;
-    }
-    
-    const linkItem = document.createElement('div');
-    linkItem.className = 'link-item';
-    linkItem.dataset.index = index;
-    
-    linkItem.innerHTML = `
-        <div class="link-header">
-            <input type="text" class="pixel-input link-text" placeholder="Link Text">
-            <button type="button" class="btn-icon remove-link">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <input type="text" class="pixel-input link-url" placeholder="https://example.com">
-    `;
-    
-    container.appendChild(linkItem);
-    
-    // Add event listeners for new item
-    const textInput = linkItem.querySelector('.link-text');
-    const urlInput = linkItem.querySelector('.link-url');
-    const removeBtn = linkItem.querySelector('.remove-link');
-    
-    textInput.addEventListener('input', function() {
-        updateLinkItem(index, textInput.value, urlInput.value);
-    });
-    
-    urlInput.addEventListener('input', function() {
-        updateLinkItem(index, textInput.value, urlInput.value);
-    });
-    
-    removeBtn.addEventListener('click', function() {
-        if (container.children.length > 1) {
-            linkItem.remove();
-            updateLinksArray();
-            updatePreview();
-        }
-    });
-    
-    // Initialize from state if available
-    if (appState.links[index]) {
-        textInput.value = appState.links[index].text || '';
-        urlInput.value = appState.links[index].url || '';
-    }
-    
-    updateLinkItem(index, textInput.value, urlInput.value);
-}
-
-function updateLinkItem(index, text, url) {
-    if (!text && !url) return;
-    
-    appState.links[index] = {
-        text: text || '',
-        url: url || ''
-    };
-    
-    saveToLocalStorage();
-    updatePreview();
-}
-
-function updateLinksArray() {
-    const linkItems = document.querySelectorAll('.link-item');
-    appState.links = [];
-    
-    linkItems.forEach((item, index) => {
-        const text = item.querySelector('.link-text').value;
-        const url = item.querySelector('.link-url').value;
+        // Animate in
+        AnimationController.animate(item, 'slideIn', APP_CONFIG.animations.duration.normal);
         
-        if (text || url) {
-            appState.links[index] = {
-                text: text || '',
-                url: url || ''
-            };
+        // Update state
+        if (data) {
+            this.state.links[index] = data;
+        } else {
+            this.state.links[index] = { text: '', url: '' };
         }
-    });
-}
-
-// Update Preview
-function updatePreview() {
-    // Update socials and links arrays
-    updateSocialsArray();
-    updateLinksArray();
+        
+        this.state.save();
+        this.updatePreview();
+        
+        // Scroll to new item
+        setTimeout(() => {
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+        
+        return item;
+    }
     
-    // Filter out empty items
-    const filteredSocials = appState.socials.filter(s => s && s.platform);
-    const filteredLinks = appState.links.filter(l => l && (l.text || l.url));
-    
-    // Update Linktree instance
-    Linktree.update({
-        profile: {
-            name: appState.profile.name || 'Your Name',
-            bio: appState.profile.bio || 'Short bio about yourself',
-            avatar: appState.profile.avatar || 'https://via.placeholder.com/150'
-        },
-        socials: filteredSocials,
-        links: filteredLinks,
-        music: {
-            enabled: appState.music.enabled,
-            track: appState.music.track,
-            volume: appState.music.volume
+    // Update link item
+    updateLinkItem(index, text, url) {
+        if (!this.state.links[index]) {
+            this.state.links[index] = { text: '', url: '' };
         }
-    });
-}
-
-// Export Functions
-function copyHTML() {
-    const html = generateHTML();
+        
+        this.state.links[index].text = text || '';
+        this.state.links[index].url = url || '';
+        this.state.save();
+        this.updatePreview();
+    }
     
-    navigator.clipboard.writeText(html).then(() => {
-        alert('HTML copied to clipboard!');
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-        alert('Failed to copy HTML. Please try again.');
-    });
-}
-
-function downloadHTML() {
-    const html = generateHTML();
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'mylinktree.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function previewFullscreen() {
-    // Save current state to localStorage for preview page
-    localStorage.setItem('linktreePreviewData', JSON.stringify(appState));
-    
-    // Open preview page
-    window.open('preview.html', '_blank');
-}
-
-// Generate HTML for export
-function generateHTML() {
-    const filteredSocials = appState.socials.filter(s => s && s.platform);
-    const filteredLinks = appState.links.filter(l => l && (l.text || l.url));
-    
-    // Platform icons mapping
-    const iconMap = {
-        github: 'fab fa-github',
-        instagram: 'fab fa-instagram',
-        twitter: 'fab fa-twitter',
-        youtube: 'fab fa-youtube',
-        linkedin: 'fab fa-linkedin',
-        tiktok: 'fab fa-tiktok',
-        whatsapp: 'fab fa-whatsapp',
-        telegram: 'fab fa-telegram',
-        discord: 'fab fa-discord',
-        spotify: 'fab fa-spotify',
-        facebook: 'fab fa-facebook',
-        twitch: 'fab fa-twitch'
-    };
-    
-    // Get music URL
-    let musicUrl = '';
-    if (appState.music.enabled && appState.music.track) {
-        switch(appState.music.track) {
-            case 'cyber':
-                musicUrl = 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3';
-                break;
-            case 'futuristic':
-                musicUrl = 'https://assets.mixkit.co/music/preview/mixkit-deep-urban-623.mp3';
-                break;
-            case 'pixel':
-                musicUrl = 'https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-667.mp3';
-                break;
+    // Remove link item
+    async removeLinkItem(index) {
+        const item = document.querySelector(`#links-list .dynamic-item[data-index="${index}"]`);
+        
+        if (item && this.state.links.length > 1) {
+            // Animate out
+            item.classList.add('removing');
+            
+            await AnimationController.animate(
+                item,
+                'slideOut',
+                APP_CONFIG.animations.duration.normal
+            );
+            
+            item.remove();
+            
+            // Update indices
+            document.querySelectorAll('#links-list .dynamic-item').forEach((el, i) => {
+                el.dataset.index = i;
+            });
+            
+            // Update state
+            this.state.links.splice(index, 1);
+            this.state.save();
+            this.updatePreview();
+            
+            Toast.show('Link removed', 'info');
+        } else {
+            // Shake animation for last item
+            if (item) {
+                await AnimationController.animate(item, 'shake', APP_CONFIG.animations.duration.fast);
+                Toast.show('At least one link is required', 'warning');
+            }
         }
     }
     
-    // Template styles
-    const templateStyles = {
-        pixel: `
-            .linktree-container {
-                background: linear-gradient(135deg, #0a0a1a, #050510);
-                color: #f0f0ff;
-                border: 3px solid #00ff9d;
-                box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
-            }
-            .linktree-btn {
-                background-color: #00ff9d;
-                color: #0a0a1a;
-                border: 2px solid #00ff9d;
-                box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
-            }
-            .linktree-btn:hover {
-                background-color: #00b8ff;
-                transform: translateY(-2px);
-                box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.5);
-            }
-        `,
-        cyber: `
-            .linktree-container {
-                background: linear-gradient(135deg, #0a0a1a, #050510);
-                color: #f0f0ff;
-                border: 2px solid transparent;
-                border-image: linear-gradient(45deg, #00f3ff, #ff00ff) 1;
-                box-shadow: 0 0 20px rgba(0, 243, 255, 0.3),
-                            inset 0 0 20px rgba(255, 0, 255, 0.1);
-            }
-            .linktree-btn {
-                background: linear-gradient(45deg, #00f3ff, #ff00ff);
-                color: #0a0a1a;
-                border: none;
-                box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-            }
-            .linktree-btn:hover {
-                box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
-                transform: scale(1.05);
-            }
-        `,
-        dark: `
-            .linktree-container {
-                background: linear-gradient(135deg, #000010, #0a0a1f);
-                color: #f0f0ff;
-                border: 2px solid #0033ff;
-                box-shadow: 0 0 30px rgba(0, 51, 255, 0.3);
-            }
-            .linktree-btn {
-                background-color: transparent;
-                color: #00f3ff;
-                border: 2px solid #0033ff;
-                position: relative;
-                overflow: hidden;
-            }
-            .linktree-btn:hover {
-                background-color: rgba(0, 51, 255, 0.1);
-                box-shadow: 0 0 15px rgba(0, 51, 255, 0.5);
-                text-shadow: 0 0 10px rgba(0, 243, 255, 0.7);
-            }
-        `
-    };
+    // ===== PREVIEW SYSTEM =====
     
-    const html = `<!DOCTYPE html>
-<html lang="id">
+    // Update preview with smooth transition
+    async updatePreviewWithTransition() {
+        const previewContent = this.elements.previewContent;
+        const skeletonLoader = this.elements.skeletonLoader;
+        
+        // Show loading state
+        previewContent.classList.add('loading');
+        skeletonLoader.style.display = 'block';
+        
+        // Wait for transition
+        await new Promise(resolve => setTimeout(resolve, APP_CONFIG.animations.duration.slow));
+        
+        // Generate new preview
+        const html = this.generatePreviewHTML();
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Crossfade animation
+        await AnimationController.crossfade(
+            previewContent,
+            tempDiv.firstChild,
+            APP_CONFIG.animations.duration.slow
+        );
+        
+        // Replace content
+        previewContent.innerHTML = html;
+        previewContent.classList.remove('loading');
+        skeletonLoader.style.display = 'none';
+        
+        // Add fade in animation
+        await AnimationController.animate(
+            previewContent,
+            'fadeSlideUp',
+            APP_CONFIG.animations.duration.normal
+        );
+    }
+    
+    // Update preview
+    async updatePreview() {
+        const previewContent = this.elements.previewContent;
+        const skeletonLoader = this.elements.skeletonLoader;
+        
+        // Show loading state
+        this.state.preview.isLoading = true;
+        previewContent.classList.add('loading');
+        skeletonLoader.style.display = 'block';
+        
+        // Small delay for smoothness
+        await new Promise(resolve => setTimeout(resolve, APP_CONFIG.previewUpdateDelay));
+        
+        // Generate new preview
+        const html = this.generatePreviewHTML();
+        previewContent.innerHTML = html;
+        
+        // Hide loader and show content
+        skeletonLoader.style.display = 'none';
+        previewContent.classList.remove('loading');
+        
+        // Add fade in animation
+        await AnimationController.animate(
+            previewContent,
+            'fadeSlideUp',
+            APP_CONFIG.animations.duration.normal
+        );
+        
+        this.state.preview.isLoading = false;
+    }
+    
+    // Generate preview HTML
+    generatePreviewHTML() {
+        const { profile, template, socials, links } = this.state;
+        const filteredSocials = socials.filter(s => s.platform && s.platform.trim() !== '');
+        const filteredLinks = links.filter(l => (l.text || l.url) && (l.text.trim() !== '' || l.url.trim() !== ''));
+        
+        // Template configuration
+        const templateConfig = APP_CONFIG.templates[template];
+        
+        // Platform icons
+        const iconMap = {};
+        APP_CONFIG.socialPlatforms.forEach(platform => {
+            iconMap[platform.id] = platform.icon;
+        });
+        
+        // Generate social links HTML
+        const socialLinksHTML = filteredSocials.length > 0 ? `
+            <div class="social-links" style="
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 32px;
+            ">
+                ${filteredSocials.map(social => {
+                    const platform = APP_CONFIG.socialPlatforms.find(p => p.id === social.platform);
+                    return `
+                        <a href="${social.url || '#'}" 
+                           style="
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 48px;
+                                height: 48px;
+                                border-radius: 50%;
+                                background: rgba(255, 255, 255, 0.1);
+                                color: white;
+                                font-size: 20px;
+                                text-decoration: none;
+                                transition: all 0.3s ${APP_CONFIG.animations.easing};
+                           "
+                           onmouseover="this.style.transform='translateY(-4px)'; this.style.background='${templateConfig.color}';"
+                           onmouseout="this.style.transform=''; this.style.background='';">
+                            <i class="${platform?.icon || 'fas fa-link'}"></i>
+                        </a>
+                    `;
+                }).join('')}
+            </div>
+        ` : '';
+        
+        // Generate custom links HTML
+        const customLinksHTML = filteredLinks.length > 0 ? `
+            <div class="links-container" style="
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            ">
+                ${filteredLinks.map(link => `
+                    <a href="${link.url || '#'}" 
+                       style="
+                            display: block;
+                            padding: 16px 24px;
+                            background: ${templateConfig.gradient};
+                            color: ${template === 'pixel' ? '#0a0a1a' : 'white'};
+                            text-decoration: none;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 16px;
+                            text-align: center;
+                            transition: all 0.3s ${APP_CONFIG.animations.easing};
+                            border: none;
+                       "
+                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)';"
+                       onmouseout="this.style.transform=''; this.style.boxShadow='';">
+                        ${link.text || 'Link'}
+                    </a>
+                `).join('')}
+            </div>
+        ` : '';
+        
+        return `
+            <div style="
+                background: ${template === 'pixel' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
+                              template === 'cyber' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
+                              'linear-gradient(135deg, #000010, #0a0a1f)'};
+                color: #f0f0ff;
+                min-height: 100%;
+                padding: 40px 24px;
+                font-family: 'Poppins', sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <div style="
+                    width: 100%;
+                    max-width: 480px;
+                    margin: 0 auto;
+                ">
+                    ${profile.avatar ? `
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <img src="${profile.avatar}" 
+                                 alt="${profile.name || 'Profile'}"
+                                 style="
+                                    width: 120px;
+                                    height: 120px;
+                                    border-radius: 50%;
+                                    object-fit: cover;
+                                    border: 3px solid ${templateConfig.color};
+                                    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+                                 ">
+                        </div>
+                    ` : ''}
+                    
+                    <h1 style="
+                        font-size: 28px;
+                        font-weight: 700;
+                        text-align: center;
+                        margin-bottom: 12px;
+                        color: ${templateConfig.color};
+                        background: ${templateConfig.gradient};
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                    ">
+                        ${profile.name || 'Your Name'}
+                    </h1>
+                    
+                    <p style="
+                        text-align: center;
+                        color: rgba(255, 255, 255, 0.8);
+                        margin-bottom: 32px;
+                        line-height: 1.6;
+                        font-size: 16px;
+                    ">
+                        ${profile.bio || 'Short bio about yourself'}
+                    </p>
+                    
+                    ${socialLinksHTML}
+                    ${customLinksHTML}
+                    
+                    ${filteredSocials.length === 0 && filteredLinks.length === 0 ? `
+                        <div style="
+                            text-align: center;
+                            padding: 40px;
+                            color: rgba(255, 255, 255, 0.5);
+                            border: 2px dashed rgba(255, 255, 255, 0.1);
+                            border-radius: 12px;
+                            margin-top: 20px;
+                        ">
+                            <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px;"></i>
+                            <p style="margin: 0; font-size: 14px;">Add social links or custom links</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // ===== EXPORT FUNCTIONS =====
+    
+    // Copy HTML to clipboard
+    async copyHTML() {
+        try {
+            const html = this.generateExportHTML();
+            await navigator.clipboard.writeText(html);
+            
+            // Success animation
+            const btn = this.elements.copyBtn;
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+            btn.classList.add('btn-success');
+            
+            // Spring animation
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transition = `transform ${APP_CONFIG.animations.duration.fast}ms ${APP_CONFIG.animations.easing}`;
+                btn.style.transform = 'scale(1)';
+            }, 10);
+            
+            // Reset after delay
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+            }, 2000);
+            
+            Toast.show('HTML copied to clipboard!', 'success');
+        } catch (error) {
+            console.error('Copy failed:', error);
+            Toast.show('Failed to copy HTML', 'error');
+        }
+    }
+    
+    // Download HTML file
+    downloadHTML() {
+        try {
+            const html = this.generateExportHTML();
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `linktree-${this.state.profile.name || 'my'}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            URL.revokeObjectURL(url);
+            
+            Toast.show('HTML file downloaded!', 'success');
+        } catch (error) {
+            console.error('Download failed:', error);
+            Toast.show('Failed to download HTML', 'error');
+        }
+    }
+    
+    // Generate export HTML
+    generateExportHTML() {
+        const { profile, template, socials, links, music } = this.state;
+        const filteredSocials = socials.filter(s => s.platform && s.platform.trim() !== '');
+        const filteredLinks = links.filter(l => (l.text || l.url) && (l.text.trim() !== '' || l.url.trim() !== ''));
+        
+        const templateConfig = APP_CONFIG.templates[template];
+        const musicTrack = APP_CONFIG.musicTracks[music.track];
+        
+        // Platform icons mapping for export
+        const iconMap = {};
+        APP_CONFIG.socialPlatforms.forEach(platform => {
+            iconMap[platform.id] = platform.icon;
+        });
+        
+        return `<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${appState.profile.name || 'My Linktree'}</title>
+    <title>${profile.name || 'My Linktree'} - PixelLink</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -644,27 +1309,38 @@ function generateHTML() {
         
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #050510;
+            background: ${template === 'pixel' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
+                          template === 'cyber' ? 'linear-gradient(135deg, #0a0a1a, #050510)' : 
+                          'linear-gradient(135deg, #000010, #0a0a1f)'};
             color: #f0f0ff;
-            line-height: 1.6;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 255, 157, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0, 184, 255, 0.05) 0%, transparent 20%);
         }
         
         .linktree-container {
             width: 100%;
             max-width: 480px;
-            border-radius: 20px;
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 24px;
             text-align: center;
-            ${templateStyles[appState.template]}
-            transition: all 0.3s ease;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .avatar {
@@ -672,103 +1348,109 @@ function generateHTML() {
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            margin: 0 auto 20px;
-            border: 3px solid;
-            border-color: ${appState.template === 'pixel' ? '#00ff9d' : appState.template === 'cyber' ? '#00f3ff' : '#0033ff'};
+            margin: 0 auto 24px;
+            border: 3px solid ${templateConfig.color};
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
         
         h1 {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: ${appState.template === 'pixel' ? '#00ff9d' : appState.template === 'cyber' ? '#00f3ff' : '#00f3ff'};
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: ${templateConfig.gradient};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .bio {
-            margin-bottom: 30px;
-            color: #b0b0d0;
-            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            line-height: 1.6;
         }
         
         .social-links {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 40px;
         }
         
         .social-link {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background-color: #1a1a2e;
+            background: rgba(255, 255, 255, 0.1);
             color: #f0f0ff;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
+            font-size: 20px;
             text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .social-link:hover {
-            transform: translateY(-5px);
-            background-color: ${appState.template === 'pixel' ? '#00ff9d' : appState.template === 'cyber' ? '#ff00ff' : '#0033ff'};
-            color: #0a0a1a;
+            transform: translateY(-4px);
+            background: ${templateConfig.color};
+            color: #000;
         }
         
         .links-container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         
-        .linktree-btn {
+        .link-btn {
             display: block;
-            padding: 15px 20px;
-            border-radius: 10px;
+            padding: 16px 24px;
+            background: ${templateConfig.gradient};
+            color: ${template === 'pixel' ? '#0a0a1a' : 'white'};
             text-decoration: none;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: none;
+        }
+        
+        .link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
         
         .music-controls {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #3a3a4a;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .music-toggle {
             background: none;
             border: none;
-            color: ${appState.template === 'pixel' ? '#00ff9d' : appState.template === 'cyber' ? '#ff00ff' : '#00f3ff'};
-            font-size: 1.5rem;
+            color: ${templateConfig.color};
+            font-size: 24px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .music-toggle:hover {
-            transform: scale(1.2);
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
         }
         
         footer {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #3a3a4a;
+            margin-top: 40px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
         }
         
-        /* Responsive Design */
-        @media (max-width: 767px) {
+        @media (max-width: 480px) {
             .linktree-container {
-                padding: 20px;
-                max-width: 100%;
-            }
-            
-            h1 {
-                font-size: 1.2rem;
+                padding: 32px 20px;
             }
             
             .avatar {
@@ -776,65 +1458,63 @@ function generateHTML() {
                 height: 100px;
             }
             
-            .linktree-btn {
-                padding: 12px 15px;
-            }
-        }
-        
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .linktree-container {
-                max-width: 500px;
+            h1 {
+                font-size: 24px;
             }
         }
     </style>
 </head>
 <body>
     <div class="linktree-container">
-        ${appState.profile.avatar ? `<img src="${appState.profile.avatar}" alt="${appState.profile.name}" class="avatar">` : ''}
+        ${profile.avatar ? `<img src="${profile.avatar}" alt="${profile.name || 'Profile'}" class="avatar">` : ''}
         
-        <h1>${appState.profile.name || 'Your Name'}</h1>
+        <h1>${profile.name || 'Your Name'}</h1>
         
         <div class="bio">
-            ${appState.profile.bio || 'Short bio about yourself'}
+            ${profile.bio || 'Short bio about yourself'}
         </div>
         
         ${filteredSocials.length > 0 ? `
         <div class="social-links">
-            ${filteredSocials.map(social => `
-                <a href="${social.url || '#'}" class="social-link" target="_blank" rel="noopener noreferrer">
-                    <i class="${iconMap[social.platform] || 'fas fa-link'}"></i>
-                </a>
-            `).join('')}
+            ${filteredSocials.map(social => {
+                const platform = APP_CONFIG.socialPlatforms.find(p => p.id === social.platform);
+                return `
+                    <a href="${social.url || '#'}" class="social-link" target="_blank" rel="noopener">
+                        <i class="${platform?.icon || 'fas fa-link'}"></i>
+                    </a>
+                `;
+            }).join('')}
         </div>
         ` : ''}
         
         ${filteredLinks.length > 0 ? `
         <div class="links-container">
             ${filteredLinks.map(link => `
-                <a href="${link.url || '#'}" class="linktree-btn" target="_blank" rel="noopener noreferrer">
+                <a href="${link.url || '#'}" class="link-btn" target="_blank" rel="noopener">
                     ${link.text || 'Link'}
                 </a>
             `).join('')}
         </div>
         ` : ''}
         
-        ${musicUrl ? `
+        ${music.enabled && musicTrack ? `
         <div class="music-controls">
-            <button class="music-toggle" id="music-toggle">
+            <button class="music-toggle" id="music-toggle" aria-label="Toggle music">
                 <i class="fas fa-play"></i>
             </button>
-            <input type="range" id="volume-control" min="0" max="100" value="${appState.music.volume}" style="width: 100px; margin-left: 15px;">
+            <input type="range" id="volume-control" min="0" max="100" value="${music.volume}" 
+                   style="width: 100px; margin-left: 16px; vertical-align: middle;">
         </div>
         ` : ''}
         
         <footer>
-            Created with PixelLink Builder
+            Made with PixelLink Builder
         </footer>
     </div>
     
-    ${musicUrl ? `
+    ${music.enabled && musicTrack ? `
     <audio id="background-music" loop preload="auto">
-        <source src="${musicUrl}" type="audio/mpeg">
+        <source src="${musicTrack.url}" type="audio/mpeg">
     </audio>
     
     <script>
@@ -843,7 +1523,7 @@ function generateHTML() {
         const volumeControl = document.getElementById('volume-control');
         
         // Set initial volume
-        music.volume = ${appState.music.volume / 100};
+        music.volume = ${music.volume / 100};
         
         // Music toggle
         toggleBtn.addEventListener('click', function() {
@@ -867,7 +1547,7 @@ function generateHTML() {
         
         if (playPromise !== undefined) {
             playPromise.then(() => {
-                // Autoplay started, unmute if user interacts
+                // Autoplay started, unmute on user interaction
                 document.addEventListener('click', function unmute() {
                     music.muted = false;
                     toggleBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -883,11 +1563,11 @@ function generateHTML() {
     
     <script>
         // Add hover effects
-        document.querySelectorAll('.linktree-btn, .social-link').forEach(btn => {
+        document.querySelectorAll('.social-link, .link-btn').forEach(btn => {
             btn.addEventListener('mouseenter', function() {
-                this.style.transform = this.classList.contains('linktree-btn') 
-                    ? 'translateY(-3px)' 
-                    : 'translateY(-5px)';
+                this.style.transform = this.classList.contains('social-link') 
+                    ? 'translateY(-4px)' 
+                    : 'translateY(-2px)';
             });
             
             btn.addEventListener('mouseleave', function() {
@@ -897,136 +1577,177 @@ function generateHTML() {
     </script>
 </body>
 </html>`;
-    
-    return html;
-}
-
-// Reset All
-function resetAll() {
-    if (!confirm('Are you sure you want to reset everything? This cannot be undone.')) {
-        return;
     }
     
-    // Clear localStorage
-    localStorage.clear();
+    // ===== MUSIC TESTING =====
     
-    // Reset app state
-    appState.profile = {
-        name: '',
-        bio: '',
-        avatar: '',
-        avatarType: 'url'
-    };
-    
-    appState.template = 'pixel';
-    appState.music = {
-        enabled: false,
-        track: '',
-        volume: 50
-    };
-    
-    appState.socials = [];
-    appState.links = [];
-    
-    // Reset form inputs
-    document.getElementById('name').value = '';
-    document.getElementById('bio').value = '';
-    document.getElementById('avatar').value = '';
-    document.getElementById('avatar-upload-input').value = '';
-    document.getElementById('preview-upload').classList.add('hidden');
-    
-    // Reset template selection
-    document.querySelectorAll('.template-option').forEach(o => o.classList.remove('active'));
-    document.querySelector('.template-option[data-template="pixel"]').classList.add('active');
-    
-    // Reset music controls
-    document.getElementById('music-enabled').checked = false;
-    document.getElementById('music-options').classList.add('hidden');
-    document.getElementById('music-select').value = '';
-    document.getElementById('volume').value = '50';
-    document.getElementById('volume-value').textContent = '50%';
-    
-    // Clear socials and links containers
-    const socialsContainer = document.getElementById('socials-container');
-    const linksContainer = document.getElementById('links-container');
-    
-    // Remove all but first item
-    while (socialsContainer.children.length > 1) {
-        socialsContainer.removeChild(socialsContainer.lastChild);
-    }
-    
-    while (linksContainer.children.length > 1) {
-        linksContainer.removeChild(linksContainer.lastChild);
-    }
-    
-    // Reset first items
-    socialsContainer.querySelector('.social-platform').value = '';
-    socialsContainer.querySelector('.social-url').value = '';
-    
-    linksContainer.querySelector('.link-text').value = '';
-    linksContainer.querySelector('.link-url').value = '';
-    
-    // Stop any playing music
-    const audio = document.getElementById('test-audio');
-    audio.pause();
-    audio.currentTime = 0;
-    
-    // Update preview
-    updatePreview();
-    
-    alert('All data has been reset!');
-}
-
-// Local Storage Functions
-function saveToLocalStorage() {
-    localStorage.setItem('linktreeBuilderData', JSON.stringify(appState));
-}
-
-function loadFromLocalStorage() {
-    const saved = localStorage.getItem('linktreeBuilderData');
-    if (saved) {
+    async testMusic() {
+        if (!this.state.music.enabled || !this.state.music.track) {
+            Toast.show('Please enable music and select a track first', 'warning');
+            return;
+        }
+        
+        const track = APP_CONFIG.musicTracks[this.state.music.track];
+        if (!track) return;
+        
+        const audio = this.elements.testAudio;
+        audio.src = track.url;
+        audio.volume = this.state.music.volume / 100;
+        
         try {
-            const data = JSON.parse(saved);
-            Object.assign(appState, data);
+            await audio.play();
+            Toast.show(`Playing ${track.name}`, 'success');
             
-            // Update form inputs from saved state
-            document.getElementById('name').value = appState.profile.name || '';
-            document.getElementById('bio').value = appState.profile.bio || '';
+            // Add visual feedback
+            this.elements.testMusicBtn.innerHTML = '<i class="fas fa-pause"></i><span>Playing...</span>';
+            this.elements.testMusicBtn.classList.add('btn-success');
             
-            // Update avatar
-            if (appState.profile.avatarType === 'url') {
-                document.querySelector('.option-tab[data-option="url"]').click();
-                document.getElementById('avatar').value = appState.profile.avatar || '';
-            } else if (appState.profile.avatar) {
-                document.querySelector('.option-tab[data-option="upload"]').click();
-                document.getElementById('uploaded-image').src = appState.profile.avatar;
-                document.getElementById('preview-upload').classList.remove('hidden');
-            }
-            
-            // Update template
-            document.querySelectorAll('.template-option').forEach(o => o.classList.remove('active'));
-            const templateOption = document.querySelector(`.template-option[data-template="${appState.template}"]`);
-            if (templateOption) {
-                templateOption.classList.add('active');
-                Linktree.setTemplate(appState.template);
-            }
-            
-            // Update music
-            document.getElementById('music-enabled').checked = appState.music.enabled;
-            if (appState.music.enabled) {
-                document.getElementById('music-options').classList.remove('hidden');
-            }
-            document.getElementById('music-select').value = appState.music.track || '';
-            document.getElementById('volume').value = appState.music.volume;
-            document.getElementById('volume-value').textContent = `${appState.music.volume}%`;
-            
-            // Update preview mode
-            if (appState.settings.previewMode === 'mobile') {
-                document.querySelector('.preview-mode-btn[data-mode="mobile"]').click();
-            }
-            
-        } catch (e) {
-            console.error('Failed to load saved data:', e);
+            // Reset button after track ends
+            audio.onended = () => {
+                this.elements.testMusicBtn.innerHTML = '<i class="fas fa-play"></i><span>Test Music</span>';
+                this.elements.testMusicBtn.classList.remove('btn-success');
+            };
+        } catch (error) {
+            console.error('Music playback failed:', error);
+            Toast.show('Click anywhere on page first, then try again', 'error');
         }
     }
+    
+    // ===== RESET FUNCTION =====
+    
+    async resetAll() {
+        // Confirm reset
+        if (!confirm('Are you sure you want to reset everything? This action cannot be undone.')) {
+            return;
+        }
+        
+        // Reset state
+        this.state.reset();
+        
+        // Reset form fields
+        this.elements.nameInput.value = '';
+        this.elements.bioInput.value = '';
+        this.elements.avatarUrl.value = '';
+        this.elements.avatarUpload.value = '';
+        
+        // Reset template
+        this.elements.templateOptions.forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        document.querySelector('.template-option[data-template="pixel"]').classList.add('selected');
+        
+        // Reset music
+        this.elements.musicToggle.checked = false;
+        this.elements.musicOptions.classList.add('hidden');
+        this.elements.musicSelect.value = '';
+        this.elements.volumeSlider.value = '50';
+        this.elements.volumeValue.textContent = '50%';
+        
+        // Reset device
+        this.elements.deviceTabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector('.device-tab[data-device="desktop"]').classList.add('active');
+        this.elements.deviceScreen.className = 'device-screen desktop';
+        
+        // Clear dynamic items
+        this.loadDynamicItems();
+        
+        // Stop music
+        this.elements.testAudio.pause();
+        this.elements.testAudio.currentTime = 0;
+        
+        // Update preview
+        await this.updatePreview();
+        
+        // Show success message
+        Toast.show('All data has been reset!', 'success');
+    }
+    
+    // ===== UTILITY FUNCTIONS =====
+    
+    // Debounce function
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Read file as data URL
+    readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // Handle keyboard shortcuts
+    handleKeyboardShortcuts(event) {
+        // Cmd/Ctrl + S to save
+        if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+            event.preventDefault();
+            this.state.save();
+            Toast.show('Progress saved', 'success');
+        }
+        
+        // Cmd/Ctrl + D to duplicate last item
+        if ((event.metaKey || event.ctrlKey) && event.key === 'd') {
+            event.preventDefault();
+            this.duplicateLastItem();
+        }
+        
+        // Escape to close tooltips
+        if (event.key === 'Escape' && this.currentTooltip) {
+            Tooltip.hide(this.currentTooltip);
+            this.currentTooltip = null;
+        }
+    }
+    
+    // Duplicate last item
+    duplicateLastItem() {
+        const socialsCount = this.state.socials.length;
+        const linksCount = this.state.links.length;
+        
+        if (socialsCount > 0) {
+            const lastSocial = this.state.socials[socialsCount - 1];
+            this.addSocialItem({...lastSocial});
+            Toast.show('Last social link duplicated', 'info');
+        } else if (linksCount > 0) {
+            const lastLink = this.state.links[linksCount - 1];
+            this.addLinkItem({...lastLink});
+            Toast.show('Last link duplicated', 'info');
+        } else {
+            Toast.show('No items to duplicate', 'warning');
+        }
+    }
+}
+
+// ===== INITIALIZE APPLICATION =====
+document.addEventListener('DOMContentLoaded', () => {
+    // Create global instance
+    window.pixelLinkBuilder = new PixelLinkBuilder();
+    
+    // Initialize with animation
+    setTimeout(() => {
+        window.pixelLinkBuilder.init();
+    }, 100);
+});
+
+// ===== GLOBAL EXPORTS =====
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        PixelLinkBuilder,
+        AppState,
+        AnimationController,
+        Toast,
+        Tooltip
+    };
 }
