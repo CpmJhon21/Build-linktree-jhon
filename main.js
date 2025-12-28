@@ -1,6 +1,6 @@
 /**
  * Linktree Builder Premium
- * Enhanced Version with New Features
+ * Enhanced Version with New Features - No Default Values
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -358,21 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         platformSelect.addEventListener('change', function() {
             const platform = this.value;
-            if (!textInput.value) {
-                const textMap = {
-                    'telegram': 'Telegram',
-                    'whatsapp': 'WhatsApp Channel',
-                    'tiktok': 'TikTok',
-                    'instagram': 'Instagram',
-                    'youtube': 'YouTube',
-                    'discord': 'Discord',
-                    'other': 'Lainnya'
-                };
-                if (textMap[platform]) {
-                    textInput.value = textMap[platform];
-                }
-            }
             
+            // Auto-update placeholder
             if (platform === 'whatsapp') {
                 urlInput.placeholder = 'https://whatsapp.com/channel/...';
             } else if (platform === 'telegram') {
@@ -497,24 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         platformSelect.addEventListener('change', function() {
             const platform = this.value;
-            
-            // Auto-fill text
-            if (platform && !textInput.value) {
-                const textMap = {
-                    'website': 'Website Saya',
-                    'portfolio': 'Portfolio',
-                    'store': 'Toko Online',
-                    'donate': 'Dukung Saya',
-                    'email': 'Email Saya',
-                    'calendar': 'Kalender',
-                    'file': 'Dokumen',
-                    'other': 'Link Lainnya'
-                };
-                
-                if (textMap[platform]) {
-                    textInput.value = textMap[platform];
-                }
-            }
             
             // Auto-update placeholder
             if (platform === 'email') {
@@ -925,20 +894,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateFullHTML(data) {
         const template = templates[data.template] || templates['1'];
         
-        const fallbackBanner = data.bannerText || 'Linktree';
-        const fallbackSubBanner = data.subBanner || 'Your Subtitle';
+        // Use empty strings as fallback instead of default values
+        const fallbackBanner = data.bannerText || '';
+        const fallbackSubBanner = data.subBanner || '';
         const fallbackTicker = data.tickerText || '';
-        const fallbackImg = data.img || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop';
-        const fallbackName = data.nama || 'Your Name';
-        const fallbackBio = data.deskripsi || 'Your bio description';
-        const fallbackFooter = data.footer || '© 2024 Your Brand';
+        const fallbackImg = data.img || '';
+        const fallbackName = data.nama || '';
+        const fallbackBio = data.deskripsi || '';
+        const fallbackFooter = data.footer || '';
         
         return `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${fallbackName} - Linktree</title>
+    <title>${fallbackName || 'Linktree'} - Linktree</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -1131,13 +1101,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </head>
 <body>
     <div class="linktree-container">
-        ${data.bannerText ? `<h1 class="banner-title">${data.bannerText}</h1>` : ''}
-        ${data.subBanner ? `<p class="banner-subtitle">${data.subBanner}</p>` : ''}
-        ${data.tickerText ? `<div class="ticker">${data.tickerText}</div>` : ''}
+        ${fallbackBanner ? `<h1 class="banner-title">${fallbackBanner}</h1>` : ''}
+        ${fallbackSubBanner ? `<p class="banner-subtitle">${fallbackSubBanner}</p>` : ''}
+        ${fallbackTicker ? `<div class="ticker">${fallbackTicker}</div>` : ''}
         
-        ${data.img ? `<img src="${data.img}" alt="${data.nama || 'Profile'}" class="profile-img">` : ''}
-        ${data.nama ? `<h1 class="profile-name">${data.nama}</h1>` : ''}
-        ${data.deskripsi ? `<p class="profile-bio">${data.deskripsi}</p>` : ''}
+        ${fallbackImg ? `<img src="${fallbackImg}" alt="${fallbackName || 'Profile'}" class="profile-img">` : ''}
+        ${fallbackName ? `<h1 class="profile-name">${fallbackName}</h1>` : ''}
+        ${fallbackBio ? `<p class="profile-bio">${fallbackBio}</p>` : ''}
         
         ${data.notices.length > 0 ? data.notices.map(notice => `<div class="notice-box">${notice}</div>`).join('') : ''}
         
@@ -1173,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         ` : ''}
         
-        ${data.footer ? `<p class="footer-text">${data.footer}</p>` : ''}
+        ${fallbackFooter ? `<p class="footer-text">${fallbackFooter}</p>` : ''}
     </div>
     
     <script>
@@ -1328,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const html = elements.htmlOutput.textContent;
         const data = collectFormData();
-        const filename = `linktree-${data.nama.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'my-linktree'}.html`;
+        const filename = `linktree-${data.nama.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'linktree'}.html`;
         
         const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
@@ -1351,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (saved) {
             console.log('🔄 Restoring saved data...');
             
-            // Restore basic fields
+            // Restore basic fields - HANYA jika ada data tersimpan
             elements.bannerText.value = saved.bannerText || '';
             elements.subBanner.value = saved.subBanner || '';
             elements.tickerText.value = saved.tickerText || '';
@@ -1470,22 +1440,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // Try to restore saved data
         const hasSavedData = restoreSavedData();
         
-        // If no saved data, start with sample data
+        // If no saved data, start with completely empty form
         if (!hasSavedData) {
+            // Clear all inputs (double-check)
+            elements.bannerText.value = '';
+            elements.subBanner.value = '';
+            elements.tickerText.value = '';
+            elements.img.value = '';
+            elements.nama.value = '';
+            elements.deskripsi.value = '';
+            elements.footer.value = '';
+            
+            // Clear dynamic containers
+            elements.noticeContainer.innerHTML = '';
+            elements.medsosCheckboxContainer.innerHTML = '';
+            elements.medsosContainer.innerHTML = '';
+            elements.linksContainer.innerHTML = '';
+            
             // Add empty fields
             addNoticeField();
             addMedsosCheckboxField();
             addMedsosField();
             addLinkField();
             
-            // Set sample values based on your photo
-            elements.bannerText.value = 'ML Lobby Generator';
-            elements.subBanner.value = 'Fan-made / Parody';
-            elements.tickerText.value = '2 | : 13 : 22';
-            elements.nama.value = 'onedev oficial';
-            elements.deskripsi.value = '[Stockholders]';
-            
-            console.log('🆕 Starting with sample data');
+            console.log('🆕 Starting with completely empty form');
         }
         
         console.log('🎉 Linktree Builder initialized successfully!');
