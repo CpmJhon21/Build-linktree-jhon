@@ -1,28 +1,33 @@
-/* Reset & Base Styles */
+/* ===== RESET & BASE STYLES ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
     color: #fff;
-    min-height: 100vh;
     padding: 20px;
     line-height: 1.6;
-    overflow-x: hidden;
 }
 
 .container {
     max-width: 1600px;
     margin: 0 auto;
+    width: 100%;
     position: relative;
-    overflow: visible;
 }
 
-/* Header */
+/* ===== HEADER ===== */
 .header {
     text-align: center;
     margin-bottom: 40px;
@@ -33,7 +38,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .header h1 {
@@ -47,6 +52,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .premium-badge {
@@ -58,6 +64,7 @@ body {
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
+    display: inline-block;
 }
 
 .subtitle {
@@ -67,14 +74,13 @@ body {
     margin: 0 auto;
 }
 
-/* App Container */
+/* ===== APP CONTAINER LAYOUT ===== */
 .app-container {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
     gap: 30px;
     margin-bottom: 40px;
     position: relative;
-    overflow: visible;
 }
 
 @media (max-width: 1200px) {
@@ -83,7 +89,7 @@ body {
     }
 }
 
-/* Sidebar Form */
+/* ===== SIDEBAR FORM ===== */
 .sidebar {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
@@ -92,8 +98,13 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     position: relative;
-    z-index: 2;
-    overflow: hidden;
+    z-index: 10;
+    min-height: 600px;
+}
+
+.form-section {
+    position: relative;
+    z-index: 1;
 }
 
 .form-section h2 {
@@ -105,6 +116,7 @@ body {
     gap: 10px;
 }
 
+/* ===== FORM GROUPS ===== */
 .form-group {
     margin-bottom: 25px;
     position: relative;
@@ -147,9 +159,10 @@ textarea {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.6);
     margin-top: 5px;
+    display: block;
 }
 
-/* Dynamic Items */
+/* ===== DYNAMIC ITEMS ===== */
 .dynamic-container {
     margin-bottom: 15px;
     position: relative;
@@ -176,6 +189,7 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
+    border: none;
 }
 
 .btn-remove:hover {
@@ -183,12 +197,16 @@ textarea {
     transform: scale(1.05);
 }
 
-/* Template Selector */
+/* ===== TEMPLATE SELECTOR FIX ===== */
+.template-selector-wrapper {
+    position: relative;
+    margin-top: 10px;
+}
+
 .template-selector {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
-    margin-top: 10px;
     position: relative;
     z-index: 1;
 }
@@ -202,21 +220,39 @@ textarea {
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
-    z-index: 1;
+    overflow: hidden;
+}
+
+.template-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: -1;
+    transition: background-color 0.3s ease;
 }
 
 .template-option.active {
-    border-color: #00dbde;
+    border-color: #00dbde !important;
+    background: rgba(0, 219, 222, 0.1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(0, 219, 222, 0.3) !important;
+}
+
+.template-option.active::before {
     background: rgba(0, 219, 222, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 219, 222, 0.3);
-    z-index: 2;
 }
 
 .template-option:hover {
-    transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.3);
-    z-index: 2;
+    transform: translateY(-2px);
+}
+
+.template-option:hover::before {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .template-preview {
@@ -240,22 +276,28 @@ textarea {
     left: 5px;
     right: 5px;
     bottom: 5px;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00ff88 2px, #00ff88 4px);
-    opacity: 0.3;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 136, 0.2) 2px, rgba(0, 255, 136, 0.2) 4px);
 }
 
 .template-preview.minimal {
-    background: linear-gradient(45deg, #ffffff, #f0f0f0);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     border: 2px solid #ddd;
 }
 
 .template-preview.neon {
     background: linear-gradient(45deg, #0f0c29, #302b63);
     border: 2px solid #00dbde;
-    box-shadow: 0 0 15px rgba(0, 219, 222, 0.5);
+    box-shadow: inset 0 0 15px rgba(0, 219, 222, 0.5);
 }
 
-/* Buttons */
+.template-selector span {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    display: block;
+    margin-top: 5px;
+}
+
+/* ===== BUTTONS ===== */
 .btn-primary, .btn-secondary, .btn-success {
     padding: 15px 25px;
     border: none;
@@ -269,8 +311,7 @@ textarea {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    position: relative;
-    z-index: 1;
+    text-decoration: none;
 }
 
 .btn-primary {
@@ -308,8 +349,8 @@ textarea {
 .btn-success:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .form-actions {
@@ -319,7 +360,7 @@ textarea {
     position: relative;
 }
 
-/* Instructions */
+/* ===== INSTRUCTIONS ===== */
 .instructions {
     background: rgba(0, 219, 222, 0.1);
     border-radius: 12px;
@@ -344,7 +385,7 @@ textarea {
     margin-bottom: 8px;
 }
 
-/* Preview Section */
+/* ===== PREVIEW SECTION ===== */
 .preview-section {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
@@ -353,7 +394,7 @@ textarea {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .preview-header {
@@ -370,7 +411,11 @@ textarea {
     gap: 15px;
 }
 
-/* Iframe Container */
+/* ===== IFRAME CONTAINER ===== */
+.preview-container {
+    position: relative;
+}
+
 .iframe-container {
     position: relative;
     background: rgba(0, 0, 0, 0.3);
@@ -385,6 +430,7 @@ textarea {
     height: 100%;
     border: none;
     background: white;
+    display: block;
 }
 
 .iframe-placeholder {
@@ -402,6 +448,7 @@ textarea {
     font-size: 1.2rem;
     text-align: center;
     padding: 30px;
+    z-index: 5;
 }
 
 .iframe-placeholder i {
@@ -410,7 +457,11 @@ textarea {
     color: rgba(255, 255, 255, 0.5);
 }
 
-/* Code Output */
+/* ===== CODE OUTPUT ===== */
+.output-section {
+    position: relative;
+}
+
 .code-container {
     position: relative;
     background: #1e1e1e;
@@ -428,6 +479,9 @@ textarea {
     line-height: 1.5;
     color: #f8f8f2;
     background: #282a36;
+    white-space: pre-wrap;
+    word-break: break-all;
+    tab-size: 4;
 }
 
 .copy-overlay {
@@ -446,7 +500,7 @@ textarea {
     transform: translateY(-10px);
     transition: all 0.3s ease;
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
 }
 
 .copy-overlay.show {
@@ -454,12 +508,13 @@ textarea {
     transform: translateY(0);
 }
 
-/* Deploy Info */
+/* ===== DEPLOY INFO ===== */
 .deploy-info {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     padding: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
 .deploy-info h4 {
@@ -497,6 +552,7 @@ textarea {
     flex: 1;
     text-align: center;
     min-width: 120px;
+    display: inline-block;
 }
 
 .deploy-btn.vercel {
@@ -519,7 +575,7 @@ textarea {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Footer */
+/* ===== FOOTER ===== */
 .footer {
     text-align: center;
     padding: 30px;
@@ -529,7 +585,7 @@ textarea {
     border: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: 40px;
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .footer-note {
@@ -538,7 +594,7 @@ textarea {
     margin-top: 10px;
 }
 
-/* Mobile Responsive */
+/* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 768px) {
     .header h1 {
         font-size: 2rem;
@@ -585,7 +641,30 @@ textarea {
     }
 }
 
-/* Animations */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px 15px;
+    }
+    
+    .sidebar, .preview-section {
+        padding: 15px;
+    }
+    
+    .template-option {
+        padding: 10px;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-success {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -601,28 +680,28 @@ textarea {
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Fix floating elements */
+/* ===== FIX FOR FLOATING ELEMENTS ===== */
 .clearfix::after {
     content: "";
     display: table;
     clear: both;
 }
 
-/* Fix background elements */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    z-index: -1;
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+    width: 10px;
 }
 
-/* Fix button positioning */
-button {
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 219, 222, 0.5);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 219, 222, 0.7);
 }

@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linktree Builder Premium</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Linktree Builder Library -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/style.css">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
 </head>
@@ -48,7 +43,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-hashtag"></i> Media Sosial</label>
                         <div class="dynamic-container" id="medsos-container">
-                            <!-- Dynamic content akan diisi oleh JavaScript -->
+                            <!-- Dynamic content -->
                         </div>
                         <button type="button" id="add-medsos" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Media Sosial</button>
                     </div>
@@ -56,7 +51,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-link"></i> Custom Links</label>
                         <div class="dynamic-container" id="links-container">
-                            <!-- Dynamic content akan diisi oleh JavaScript -->
+                            <!-- Dynamic content -->
                         </div>
                         <button type="button" id="add-link" class="btn-secondary"><i class="fas fa-plus"></i> Tambah Link</button>
                     </div>
@@ -68,18 +63,20 @@
 
                     <div class="form-group">
                         <label for="template"><i class="fas fa-palette"></i> Template Style</label>
-                        <div class="template-selector">
-                            <div class="template-option active" data-template="1">
-                                <div class="template-preview pixel"></div>
-                                <span>Pixel Modern</span>
-                            </div>
-                            <div class="template-option" data-template="2">
-                                <div class="template-preview minimal"></div>
-                                <span>Minimal Clean</span>
-                            </div>
-                            <div class="template-option" data-template="3">
-                                <div class="template-preview neon"></div>
-                                <span>Cyber Neon</span>
+                        <div class="template-selector-wrapper">
+                            <div class="template-selector">
+                                <div class="template-option active" data-template="1">
+                                    <div class="template-preview pixel"></div>
+                                    <span>Pixel Modern</span>
+                                </div>
+                                <div class="template-option" data-template="2">
+                                    <div class="template-preview minimal"></div>
+                                    <span>Minimal Clean</span>
+                                </div>
+                                <div class="template-option" data-template="3">
+                                    <div class="template-preview neon"></div>
+                                    <span>Cyber Neon</span>
+                                </div>
                             </div>
                         </div>
                         <input type="hidden" id="template" value="1" autocomplete="off">
@@ -124,7 +121,7 @@
                     <div class="output-section">
                         <h3><i class="fas fa-code"></i> Generated HTML</h3>
                         <div class="code-container">
-                            <pre id="html-output"><code class="language-html">// HTML akan muncul di sini...</code></pre>
+                            <pre id="html-output"><code>// HTML akan muncul di sini...</code></pre>
                             <div class="copy-overlay" id="copy-overlay">
                                 <i class="fas fa-check"></i> Copied!
                             </div>
@@ -149,9 +146,7 @@
         </footer>
     </div>
 
-    <!-- Linktree Builder JS -->
-    <script src="https://cdn.jsdelivr.net/gh/hanzcode1/LinktreeBuilder@main/script.js"></script>
-    <!-- Custom JS -->
+    <!-- Scripts -->
     <script src="main.js"></script>
 </body>
 </html>
