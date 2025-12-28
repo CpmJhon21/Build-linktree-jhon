@@ -1,6 +1,6 @@
 /**
  * Linktree Builder Premium
- * Fixed Version - Data persistence and better UX
+ * Enhanced Version with New Features
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -11,13 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== DOM ELEMENTS ====================
     const elements = {
+        bannerText: document.getElementById('bannerText'),
+        subBanner: document.getElementById('subBanner'),
+        tickerText: document.getElementById('tickerText'),
         img: document.getElementById('img'),
         nama: document.getElementById('nama'),
         deskripsi: document.getElementById('deskripsi'),
         footer: document.getElementById('footer'),
         template: document.getElementById('template'),
+        noticeContainer: document.getElementById('notice-container'),
+        medsosCheckboxContainer: document.getElementById('medsos-checkbox-container'),
         medsosContainer: document.getElementById('medsos-container'),
         linksContainer: document.getElementById('links-container'),
+        addNoticeBtn: document.getElementById('add-notice'),
+        addMedsosCheckboxBtn: document.getElementById('add-medsos-checkbox'),
         addMedsosBtn: document.getElementById('add-medsos'),
         addLinkBtn: document.getElementById('add-link'),
         previewBtn: document.getElementById('preview-btn'),
@@ -42,10 +49,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 body {
                     background: linear-gradient(45deg, #2b2b2b, #4a4a4a);
                     font-family: "Press Start 2P", cursive;
+                    color: #00ff88;
                 }
                 .linktree-container {
                     border: 4px solid #00ff88;
                     box-shadow: 0 0 20px #00ff88;
+                    background: rgba(43, 43, 43, 0.95);
                 }
                 .linktree-btn {
                     background: #2b2b2b;
@@ -56,6 +65,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     background: #00ff88;
                     color: #2b2b2b;
                     transform: translateY(-2px);
+                }
+                .notice-box {
+                    background: rgba(0, 255, 136, 0.1);
+                    border: 2px solid #00ff88;
+                    color: #00ff88;
+                }
+                .ticker {
+                    color: #00ff88;
+                    border: 2px solid #00ff88;
+                    background: rgba(43, 43, 43, 0.9);
                 }
             `
         },
@@ -86,6 +105,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     transform: translateY(-2px);
                     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
                 }
+                .notice-box {
+                    background: rgba(102, 126, 234, 0.1);
+                    border: 1px solid #667eea;
+                    color: #667eea;
+                }
+                .ticker {
+                    color: #667eea;
+                    border: 1px solid #667eea;
+                    background: rgba(255, 255, 255, 0.9);
+                }
             `
         },
         '3': {
@@ -114,6 +143,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     background: rgba(0, 219, 222, 0.3);
                     transform: translateY(-2px);
                     box-shadow: 0 0 20px rgba(0, 219, 222, 0.5);
+                }
+                .notice-box {
+                    background: rgba(0, 219, 222, 0.1);
+                    border: 2px solid #00dbde;
+                    color: #00dbde;
+                }
+                .ticker {
+                    color: #00dbde;
+                    border: 2px solid #00dbde;
+                    background: rgba(0, 0, 0, 0.7);
+                    text-shadow: 0 0 10px rgba(0, 219, 222, 0.5);
                 }
             `
         }
@@ -246,6 +286,111 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== DYNAMIC FIELDS ====================
     
+    // Add Notice Field
+    function addNoticeField(text = '') {
+        console.log('📝 Adding notice field');
+        
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <input type="text" class="notice-text" placeholder="Website ini GRATIS 100% dan DILARANG DIJUAL BELIKAN" value="${text || ''}">
+            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+        `;
+        
+        elements.noticeContainer.appendChild(div);
+        
+        // Setup event listeners
+        const removeBtn = div.querySelector('.btn-remove');
+        removeBtn.addEventListener('click', function() {
+            div.remove();
+            autoSave();
+        });
+        
+        const input = div.querySelector('.notice-text');
+        input.addEventListener('input', autoSave);
+        
+        return div;
+    }
+    
+    // Add Social Media with Checkbox Field
+    function addMedsosCheckboxField(platform = '', text = '', url = '', checked = false) {
+        console.log('☑️ Adding social media checkbox field');
+        
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <select class="platform-select">
+                <option value="">Pilih Platform</option>
+                <option value="telegram">Telegram</option>
+                <option value="whatsapp">WhatsApp Channel</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="youtube">YouTube</option>
+                <option value="discord">Discord</option>
+                <option value="other">Lainnya</option>
+            </select>
+            <input type="text" class="checkbox-text" placeholder="Nama channel/akun" value="${text || ''}">
+            <input type="text" class="checkbox-url" placeholder="https://t.me/username" value="${url || ''}">
+            <label class="checkbox-label">
+                <input type="checkbox" class="checkbox-input" ${checked ? 'checked' : ''}>
+                <span class="checkbox-custom"></span>
+            </label>
+            <button type="button" class="btn-remove"><i class="fas fa-times"></i></button>
+        `;
+        
+        elements.medsosCheckboxContainer.appendChild(div);
+        
+        if (platform) {
+            div.querySelector('.platform-select').value = platform;
+        }
+        
+        // Setup event listeners
+        const removeBtn = div.querySelector('.btn-remove');
+        removeBtn.addEventListener('click', function() {
+            div.remove();
+            autoSave();
+        });
+        
+        const platformSelect = div.querySelector('.platform-select');
+        const textInput = div.querySelector('.checkbox-text');
+        const urlInput = div.querySelector('.checkbox-url');
+        const checkbox = div.querySelector('.checkbox-input');
+        
+        platformSelect.addEventListener('change', function() {
+            const platform = this.value;
+            if (!textInput.value) {
+                const textMap = {
+                    'telegram': 'Telegram',
+                    'whatsapp': 'WhatsApp Channel',
+                    'tiktok': 'TikTok',
+                    'instagram': 'Instagram',
+                    'youtube': 'YouTube',
+                    'discord': 'Discord',
+                    'other': 'Lainnya'
+                };
+                if (textMap[platform]) {
+                    textInput.value = textMap[platform];
+                }
+            }
+            
+            if (platform === 'whatsapp') {
+                urlInput.placeholder = 'https://whatsapp.com/channel/...';
+            } else if (platform === 'telegram') {
+                urlInput.placeholder = 'https://t.me/username';
+            } else if (platform) {
+                urlInput.placeholder = `https://${platform}.com/username`;
+            }
+            
+            autoSave();
+        });
+        
+        textInput.addEventListener('input', autoSave);
+        urlInput.addEventListener('input', autoSave);
+        checkbox.addEventListener('change', autoSave);
+        
+        return div;
+    }
+    
     // Add Social Media Field
     function addMedsosField(platform = '', url = '') {
         console.log('➕ Adding social media field');
@@ -284,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
-            autoSave(); // Auto-save when removing
+            autoSave();
         });
         
         // Auto-update placeholder
@@ -301,10 +446,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 input.placeholder = 'username atau URL';
             }
-            autoSave(); // Auto-save on change
+            autoSave();
         });
         
-        input.addEventListener('input', autoSave); // Auto-save on typing
+        input.addEventListener('input', autoSave);
         
         return div;
     }
@@ -322,8 +467,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <option value="portfolio">Portfolio</option>
                 <option value="store">Online Store</option>
                 <option value="donate">Donasi/Support</option>
-                <option value="reddit">Reddit</option>
-                <option value="twitch">Twitch</option>
                 <option value="email">Email</option>
                 <option value="calendar">Kalender</option>
                 <option value="file">File/Dokumen</option>
@@ -344,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const removeBtn = div.querySelector('.btn-remove');
         removeBtn.addEventListener('click', function() {
             div.remove();
-            autoSave(); // Auto-save when removing
+            autoSave();
         });
         
         // Auto-fill text based on platform
@@ -362,8 +505,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     'portfolio': 'Portfolio',
                     'store': 'Toko Online',
                     'donate': 'Dukung Saya',
-                    'reddit': 'Reddit',
-                    'twitch': 'Twitch',
                     'email': 'Email Saya',
                     'calendar': 'Kalender',
                     'file': 'Dokumen',
@@ -386,19 +527,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 urlInput.placeholder = 'https://example.com';
             }
             
-            autoSave(); // Auto-save on change
+            autoSave();
         });
         
-        textInput.addEventListener('input', autoSave); // Auto-save on typing
-        urlInput.addEventListener('input', autoSave); // Auto-save on typing
+        textInput.addEventListener('input', autoSave);
+        urlInput.addEventListener('input', autoSave);
         
         return div;
     }
     
     // ==================== DATA COLLECTION ====================
     function collectFormData() {
+        const notices = [];
+        const medsosCheckbox = [];
         const medsos = [];
         const links = [];
+        
+        // Collect notices
+        elements.noticeContainer.querySelectorAll('.dynamic-item').forEach(item => {
+            const text = item.querySelector('.notice-text').value.trim();
+            if (text) {
+                notices.push(text);
+            }
+        });
+        
+        // Collect social media with checkbox
+        elements.medsosCheckboxContainer.querySelectorAll('.dynamic-item').forEach(item => {
+            const platform = item.querySelector('.platform-select').value;
+            const text = item.querySelector('.checkbox-text').value.trim();
+            const url = item.querySelector('.checkbox-url').value.trim();
+            const checked = item.querySelector('.checkbox-input').checked;
+            
+            if (text) {
+                const formattedUrl = formatURL(url, platform);
+                medsosCheckbox.push({
+                    platform: platform,
+                    text: text,
+                    url: formattedUrl,
+                    checked: checked,
+                    icon: detectIcon(formattedUrl, platform, text)
+                });
+            }
+        });
         
         // Collect social media
         elements.medsosContainer.querySelectorAll('.dynamic-item').forEach(item => {
@@ -433,9 +603,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         return {
+            bannerText: elements.bannerText.value.trim(),
+            subBanner: elements.subBanner.value.trim(),
+            tickerText: elements.tickerText.value.trim(),
             img: elements.img.value.trim(),
             nama: elements.nama.value.trim(),
             deskripsi: elements.deskripsi.value.trim(),
+            notices: notices,
+            medsosCheckbox: medsosCheckbox,
             medsos: medsos,
             links: links,
             footer: elements.footer.value.trim(),
@@ -446,6 +621,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== HTML GENERATION ====================
     function generatePreviewHTML(data) {
         const template = templates[data.template] || templates['1'];
+        
+        // Banner HTML
+        let bannerHTML = '';
+        if (data.bannerText) {
+            bannerHTML += `<h1 class="banner-title">${data.bannerText}</h1>`;
+        }
+        if (data.subBanner) {
+            bannerHTML += `<p class="banner-subtitle">${data.subBanner}</p>`;
+        }
+        
+        // Ticker HTML
+        let tickerHTML = '';
+        if (data.tickerText) {
+            tickerHTML = `<div class="ticker">${data.tickerText}</div>`;
+        }
+        
+        // Notice boxes HTML
+        let noticesHTML = '';
+        if (data.notices.length > 0) {
+            data.notices.forEach(notice => {
+                noticesHTML += `<div class="notice-box">${notice}</div>`;
+            });
+        }
+        
+        // Social media with checkbox HTML
+        let medsosCheckboxHTML = '';
+        if (data.medsosCheckbox.length > 0) {
+            medsosCheckboxHTML = '<div class="checkbox-links">';
+            data.medsosCheckbox.forEach(item => {
+                const checkIcon = item.checked ? '<i class="fas fa-check-square"></i>' : '<i class="far fa-square"></i>';
+                medsosCheckboxHTML += `
+                    <a href="${item.url}" target="_blank" class="linktree-btn checkbox-link" rel="noopener noreferrer">
+                        ${checkIcon}
+                        <span>${item.text}</span>
+                    </a>
+                `;
+            });
+            medsosCheckboxHTML += '</div>';
+        }
         
         // Social media buttons
         let medsosHTML = '';
@@ -514,6 +728,29 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: fadeIn 0.8s ease-out;
         }
         
+        .banner-title {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .ticker {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
         .profile-img {
             width: 120px;
             height: 120px;
@@ -524,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         .profile-name {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             margin-bottom: 10px;
             font-weight: 700;
         }
@@ -534,6 +771,40 @@ document.addEventListener('DOMContentLoaded', function() {
             opacity: 0.9;
             margin-bottom: 30px;
             line-height: 1.6;
+        }
+        
+        .notice-box {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: left;
+            line-height: 1.5;
+        }
+        
+        .checkbox-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .checkbox-link {
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .checkbox-link i {
+            font-size: 1.2rem;
+            min-width: 24px;
         }
         
         .social-links {
@@ -605,18 +876,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 padding: 25px 20px;
             }
             
-            .profile-name {
+            .banner-title {
                 font-size: 1.5rem;
+            }
+            
+            .ticker {
+                font-size: 1rem;
+                padding: 6px 12px;
             }
         }
     </style>
 </head>
 <body>
     <div class="linktree-container">
+        ${bannerHTML}
+        ${tickerHTML}
+        
         ${data.img ? `<img src="${data.img}" alt="${data.nama || 'Profile'}" class="profile-img">` : ''}
         ${data.nama ? `<h1 class="profile-name">${data.nama}</h1>` : ''}
         ${data.deskripsi ? `<p class="profile-bio">${data.deskripsi}</p>` : ''}
         
+        ${noticesHTML}
+        ${medsosCheckboxHTML}
         ${medsosHTML}
         ${linksHTML}
         
@@ -644,6 +925,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateFullHTML(data) {
         const template = templates[data.template] || templates['1'];
         
+        const fallbackBanner = data.bannerText || 'Linktree';
+        const fallbackSubBanner = data.subBanner || 'Your Subtitle';
+        const fallbackTicker = data.tickerText || '';
         const fallbackImg = data.img || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop';
         const fallbackName = data.nama || 'Your Name';
         const fallbackBio = data.deskripsi || 'Your bio description';
@@ -686,6 +970,138 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: fadeIn 0.8s ease-out;
         }
         
+        .banner-title {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .ticker {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            margin: 0 auto 20px;
+        }
+        
+        .profile-name {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .profile-bio {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .notice-box {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: left;
+            line-height: 1.5;
+        }
+        
+        .checkbox-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .checkbox-link {
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .checkbox-link i {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .medsos-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .linktree-btn {
+            padding: 18px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .custom-link i {
+            font-size: 1.1rem;
+        }
+        
+        .footer-text {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -701,70 +1117,66 @@ document.addEventListener('DOMContentLoaded', function() {
             .linktree-container {
                 padding: 25px 20px;
             }
+            
+            .banner-title {
+                font-size: 1.5rem;
+            }
+            
+            .ticker {
+                font-size: 1rem;
+                padding: 6px 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="linktree-app"></div>
+    <div class="linktree-container">
+        ${data.bannerText ? `<h1 class="banner-title">${data.bannerText}</h1>` : ''}
+        ${data.subBanner ? `<p class="banner-subtitle">${data.subBanner}</p>` : ''}
+        ${data.tickerText ? `<div class="ticker">${data.tickerText}</div>` : ''}
+        
+        ${data.img ? `<img src="${data.img}" alt="${data.nama || 'Profile'}" class="profile-img">` : ''}
+        ${data.nama ? `<h1 class="profile-name">${data.nama}</h1>` : ''}
+        ${data.deskripsi ? `<p class="profile-bio">${data.deskripsi}</p>` : ''}
+        
+        ${data.notices.length > 0 ? data.notices.map(notice => `<div class="notice-box">${notice}</div>`).join('') : ''}
+        
+        ${data.medsosCheckbox.length > 0 ? `
+            <div class="checkbox-links">
+                ${data.medsosCheckbox.map(item => `
+                    <a href="${item.url}" target="_blank" class="linktree-btn checkbox-link" rel="noopener noreferrer">
+                        ${item.checked ? '<i class="fas fa-check-square"></i>' : '<i class="far fa-square"></i>'}
+                        <span>${item.text}</span>
+                    </a>
+                `).join('')}
+            </div>
+        ` : ''}
+        
+        ${data.medsos.length > 0 ? `
+            <div class="social-links">
+                ${data.medsos.map(item => `
+                    <a href="${item.url}" target="_blank" class="linktree-btn medsos-btn" rel="noopener noreferrer">
+                        <i class="fab ${item.icon}"></i>
+                    </a>
+                `).join('')}
+            </div>
+        ` : ''}
+        
+        ${data.links.length > 0 ? `
+            <div class="links-container">
+                ${data.links.map(item => `
+                    <a href="${item.url}" target="_blank" class="linktree-btn custom-link" rel="noopener noreferrer">
+                        <i class="fas ${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                `).join('')}
+            </div>
+        ` : ''}
+        
+        ${data.footer ? `<p class="footer-text">${data.footer}</p>` : ''}
+    </div>
     
     <script>
-        const Linktree = {
-            init: function(config) {
-                const container = document.getElementById('linktree-app');
-                
-                // Social media buttons
-                let medsosHTML = '';
-                if (config.medsos && config.medsos.length > 0) {
-                    medsosHTML = '<div class="social-links">';
-                    config.medsos.forEach(item => {
-                        medsosHTML += \`
-                            <a href="\${item.url}" target="_blank" class="linktree-btn medsos-btn" rel="noopener noreferrer">
-                                <i class="fab \${item.icon}"></i>
-                            </a>
-                        \`;
-                    });
-                    medsosHTML += '</div>';
-                }
-                
-                // Custom links
-                let linksHTML = '';
-                if (config.links && config.links.length > 0) {
-                    linksHTML = '<div class="links-container">';
-                    config.links.forEach(item => {
-                        linksHTML += \`
-                            <a href="\${item.url}" target="_blank" class="linktree-btn custom-link" rel="noopener noreferrer">
-                                <i class="fas \${item.icon}"></i>
-                                <span>\${item.text}</span>
-                            </a>
-                        \`;
-                    });
-                    linksHTML += '</div>';
-                }
-                
-                container.innerHTML = \`
-                    <div class="linktree-container">
-                        \${config.img ? \`<img src="\${config.img}" alt="\${config.nama || 'Profile'}" class="profile-img">\` : ''}
-                        \${config.nama ? \`<h1 class="profile-name">\${config.nama}</h1>\` : ''}
-                        \${config.deskripsi ? \`<p class="profile-bio">\${config.deskripsi}</p>\` : ''}
-                        
-                        \${medsosHTML}
-                        \${linksHTML}
-                        
-                        \${config.footer ? \`<p class="footer-text">\${config.footer}</p>\` : ''}
-                    </div>
-                \`;
-            }
-        };
-        
-        Linktree.init({
-            img: "${fallbackImg}",
-            nama: "${fallbackName.replace(/"/g, '\\"')}",
-            deskripsi: "${fallbackBio.replace(/"/g, '\\"')}",
-            medsos: ${JSON.stringify(data.medsos)},
-            links: ${JSON.stringify(data.links)},
-            footer: "${fallbackFooter.replace(/"/g, '\\"')}"
-        });
-        
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('.linktree-btn');
             buttons.forEach(btn => {
@@ -794,17 +1206,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('👁️ Generating preview...');
         
         const data = collectFormData();
-        
-        // Validation
-        if (!data.nama || !data.deskripsi) {
-            alert('⚠️ Harap isi Nama dan Deskripsi terlebih dahulu');
-            return;
-        }
-        
-        if (data.medsos.length === 0 && data.links.length === 0) {
-            alert('🔗 Tambahkan minimal satu link (media sosial atau custom link)');
-            return;
-        }
         
         // Save current state
         saveToLocalStorage(data);
@@ -836,12 +1237,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Clear all inputs
+        elements.bannerText.value = '';
+        elements.subBanner.value = '';
+        elements.tickerText.value = '';
         elements.img.value = '';
         elements.nama.value = '';
         elements.deskripsi.value = '';
         elements.footer.value = '';
         
         // Clear dynamic containers
+        elements.noticeContainer.innerHTML = '';
+        elements.medsosCheckboxContainer.innerHTML = '';
         elements.medsosContainer.innerHTML = '';
         elements.linksContainer.innerHTML = '';
         
@@ -872,6 +1278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add empty fields
         setTimeout(() => {
+            addNoticeField();
+            addMedsosCheckboxField();
             addMedsosField();
             addLinkField();
         }, 100);
@@ -944,6 +1352,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🔄 Restoring saved data...');
             
             // Restore basic fields
+            elements.bannerText.value = saved.bannerText || '';
+            elements.subBanner.value = saved.subBanner || '';
+            elements.tickerText.value = saved.tickerText || '';
             elements.img.value = saved.img || '';
             elements.nama.value = saved.nama || '';
             elements.deskripsi.value = saved.deskripsi || '';
@@ -961,25 +1372,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Clear existing dynamic fields
+            elements.noticeContainer.innerHTML = '';
+            elements.medsosCheckboxContainer.innerHTML = '';
             elements.medsosContainer.innerHTML = '';
             elements.linksContainer.innerHTML = '';
+            
+            // Restore notices
+            if (saved.notices && saved.notices.length > 0) {
+                saved.notices.forEach(notice => {
+                    addNoticeField(notice);
+                });
+            } else {
+                addNoticeField();
+            }
+            
+            // Restore social media with checkbox
+            if (saved.medsosCheckbox && saved.medsosCheckbox.length > 0) {
+                saved.medsosCheckbox.forEach(item => {
+                    addMedsosCheckboxField(item.platform, item.text, item.url, item.checked);
+                });
+            } else {
+                addMedsosCheckboxField();
+            }
             
             // Restore social media
             if (saved.medsos && saved.medsos.length > 0) {
                 saved.medsos.forEach(item => {
-                    // Extract username from URL for display
                     let displayUrl = item.url;
                     try {
                         const urlObj = new URL(item.url);
                         displayUrl = urlObj.pathname.replace(/^\//, '') || urlObj.hostname;
-                    } catch (e) {
-                        // Keep original if URL parsing fails
-                    }
-                    
+                    } catch (e) {}
                     addMedsosField(item.platform, displayUrl);
                 });
             } else {
-                addMedsosField(); // Add one empty field
+                addMedsosField();
             }
             
             // Restore custom links
@@ -988,13 +1415,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     addLinkField(item.platform, item.text, item.url);
                 });
             } else {
-                addLinkField(); // Add one empty field
+                addLinkField();
             }
             
             console.log('✅ Saved data restored');
             
-            // Check if we should auto-generate preview
-            if (saved.nama && saved.deskripsi && (saved.medsos?.length > 0 || saved.links?.length > 0)) {
+            // Auto-generate preview if we have enough data
+            if (saved.nama && saved.deskripsi && 
+                (saved.notices?.length > 0 || saved.medsosCheckbox?.length > 0 || 
+                 saved.medsos?.length > 0 || saved.links?.length > 0)) {
                 setTimeout(() => {
                     handlePreview();
                 }, 500);
@@ -1011,6 +1440,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('⚡ Initializing Linktree Builder...');
         
         // Setup event listeners
+        elements.addNoticeBtn.addEventListener('click', () => addNoticeField());
+        elements.addMedsosCheckboxBtn.addEventListener('click', () => addMedsosCheckboxField());
         elements.addMedsosBtn.addEventListener('click', () => addMedsosField());
         elements.addLinkBtn.addEventListener('click', () => addLinkField());
         elements.previewBtn.addEventListener('click', handlePreview);
@@ -1026,30 +1457,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 this.classList.add('active');
                 elements.template.value = this.dataset.template;
-                autoSave(); // Auto-save template change
+                autoSave();
             });
         });
         
         // Auto-save on input for basic fields
-        [elements.img, elements.nama, elements.deskripsi, elements.footer].forEach(input => {
+        [elements.bannerText, elements.subBanner, elements.tickerText, 
+         elements.img, elements.nama, elements.deskripsi, elements.footer].forEach(input => {
             input.addEventListener('input', autoSave);
         });
         
         // Try to restore saved data
         const hasSavedData = restoreSavedData();
         
-        // If no saved data, start with empty form
+        // If no saved data, start with sample data
         if (!hasSavedData) {
             // Add empty fields
+            addNoticeField();
+            addMedsosCheckboxField();
             addMedsosField();
             addLinkField();
             
-            // Set default values for testing
-            elements.nama.value = 'Nama Anda';
-            elements.deskripsi.value = 'Deskripsi singkat tentang Anda...';
-            elements.footer.value = '© 2024 Your Brand';
+            // Set sample values based on your photo
+            elements.bannerText.value = 'ML Lobby Generator';
+            elements.subBanner.value = 'Fan-made / Parody';
+            elements.tickerText.value = '2 | : 13 : 22';
+            elements.nama.value = 'onedev oficial';
+            elements.deskripsi.value = '[Stockholders]';
             
-            console.log('🆕 Starting with empty form');
+            console.log('🆕 Starting with sample data');
         }
         
         console.log('🎉 Linktree Builder initialized successfully!');

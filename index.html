@@ -29,6 +29,27 @@
                 <section class="form-section">
                     <h2><i class="fas fa-cog"></i> Konfigurasi Profil</h2>
                     
+                    <!-- Banner Text (seperti ML Lobby Generator) -->
+                    <div class="form-group">
+                        <label for="bannerText"><i class="fas fa-flag"></i> Banner Text</label>
+                        <input type="text" id="bannerText" placeholder="ML Lobby Generator" autocomplete="off">
+                        <small class="input-hint">Teks yang muncul di bagian atas halaman</small>
+                    </div>
+
+                    <!-- Sub Banner -->
+                    <div class="form-group">
+                        <label for="subBanner"><i class="fas fa-tag"></i> Sub Banner</label>
+                        <input type="text" id="subBanner" placeholder="Fan-made / Parody" autocomplete="off">
+                        <small class="input-hint">Teks kecil di bawah banner utama</small>
+                    </div>
+
+                    <!-- Real-time Ticker -->
+                    <div class="form-group">
+                        <label for="tickerText"><i class="fas fa-clock"></i> Ticker / Waktu</label>
+                        <input type="text" id="tickerText" placeholder="2 | : 13 : 22" autocomplete="off">
+                        <small class="input-hint">Format: X | : XX : XX (kosongkan jika tidak perlu)</small>
+                    </div>
+
                     <!-- Profile Image -->
                     <div class="form-group">
                         <label for="img"><i class="fas fa-image"></i> Foto Profil (URL)</label>
@@ -48,9 +69,33 @@
                         <textarea id="deskripsi" placeholder="Deskripsi singkat tentang Anda..." rows="3" autocomplete="off"></textarea>
                     </div>
 
-                    <!-- Social Media -->
+                    <!-- Important Notice Box -->
                     <div class="form-group">
-                        <label><i class="fas fa-hashtag"></i> Media Sosial</label>
+                        <label><i class="fas fa-exclamation-triangle"></i> Informasi Penting</label>
+                        <div class="dynamic-container" id="notice-container">
+                            <!-- Dynamic content will be added here -->
+                        </div>
+                        <button type="button" id="add-notice" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Tambah Informasi
+                        </button>
+                        <small class="input-hint">Informasi penting dalam box (contoh: Website GRATIS 100%)</small>
+                    </div>
+
+                    <!-- Social Media with Checkbox -->
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Media Sosial (dengan Checkbox)</label>
+                        <div class="dynamic-container" id="medsos-checkbox-container">
+                            <!-- Dynamic content will be added here -->
+                        </div>
+                        <button type="button" id="add-medsos-checkbox" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Tambah Media Sosial dengan Checkbox
+                        </button>
+                        <small class="input-hint">Media sosial dengan checkbox (contoh: Telegram ☑️)</small>
+                    </div>
+
+                    <!-- Regular Social Media -->
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Media Sosial (Biasa)</label>
                         <div class="dynamic-container" id="medsos-container">
                             <!-- Dynamic content will be added here -->
                         </div>
