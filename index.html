@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linktree Builder Premium</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-tree"></i> Linktree Builder <span class="premium-badge">PREMIUM</span></h1>
+            <p class="subtitle">Buat halaman linktree profesional dengan GUI premium. Tanpa kode, langsung deploy!</p>
+        </header>
+
+        <!-- Main App Container -->
+        <main class="app-container">
+            <!-- Sidebar Form -->
+            <div class="sidebar">
+                <section class="form-section">
+                    <h2><i class="fas fa-cog"></i> Konfigurasi Profil</h2>
+                    
+                    <!-- Profile Image -->
+                    <div class="form-group">
+                        <label for="img"><i class="fas fa-image"></i> Foto Profil (URL)</label>
+                        <input type="text" id="img" placeholder="https://example.com/foto.jpg" autocomplete="off">
+                        <small class="input-hint">Kosongkan jika tidak ingin menampilkan foto</small>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label for="nama"><i class="fas fa-user"></i> Nama</label>
+                        <input type="text" id="nama" placeholder="Nama atau Brand Anda" autocomplete="off">
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="form-group">
+                        <label for="deskripsi"><i class="fas fa-file-alt"></i> Deskripsi / Bio</label>
+                        <textarea id="deskripsi" placeholder="Deskripsi singkat tentang Anda..." rows="3" autocomplete="off"></textarea>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Media Sosial</label>
+                        <div class="dynamic-container" id="medsos-container">
+                            <!-- Will be empty initially -->
+                        </div>
+                        <button type="button" id="add-medsos" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Tambah Media Sosial
+                        </button>
+                    </div>
+
+                    <!-- Custom Links -->
+                    <div class="form-group">
+                        <label><i class="fas fa-link"></i> Custom Links</label>
+                        <div class="dynamic-container" id="links-container">
+                            <!-- Will be empty initially -->
+                        </div>
+                        <button type="button" id="add-link" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Tambah Link
+                        </button>
+                    </div>
+
+                    <!-- Footer Text -->
+                    <div class="form-group">
+                        <label for="footer"><i class="fas fa-copyright"></i> Footer Text</label>
+                        <input type="text" id="footer" placeholder="© 2024 Your Brand" autocomplete="off">
+                   
