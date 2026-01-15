@@ -1,585 +1,1163 @@
-// DOM Elements
-const elements = {
-    // Form inputs
-    bannerText: document.getElementById('bannerText'),
-    subBanner: document.getElementById('subBanner'),
-    img: document.getElementById('img'),
-    nama: document.getElementById('nama'),
-    deskripsi: document.getElementById('deskripsi'),
-    tickerText: document.getElementById('tickerText'),
-    footer: document.getElementById('footer'),
-    template: document.getElementById('template'),
-    
-    // Ticker elements
-    tickerTypeRadios: document.querySelectorAll('input[name="tickerType"]'),
-    staticTickerContainer: document.getElementById('static-ticker-container'),
-    digitalTickerContainer: document.getElementById('digital-ticker-container'),
-    timezone: document.getElementById('timezone'),
-    
-    // Dynamic containers
-    noticeContainer: document.getElementById('notice-container'),
-    medsosCheckboxContainer: document.getElementById('medsos-checkbox-container'),
-    medsosContainer: document.getElementById('medsos-container'),
-    linksContainer: document.getElementById('links-container'),
-    
-    // Buttons
-    addNoticeBtn: document.getElementById('add-notice'),
-    addMedsosCheckboxBtn: document.getElementById('add-medsos-checkbox'),
-    addMedsosBtn: document.getElementById('add-medsos'),
-    addLinkBtn: document.getElementById('add-link'),
-    previewBtn: document.getElementById('preview-btn'),
-    resetBtn: document.getElementById('reset-btn'),
-    copyBtn: document.getElementById('copy-btn'),
-    downloadBtn: document.getElementById('download-btn'),
-    
-    // Preview elements
-    iframePlaceholder: document.getElementById('iframe-placeholder'),
-    previewFrame: document.getElementById('preview-frame'),
-    htmlOutput: document.getElementById('html-output'),
-    copyOverlay: document.getElementById('copy-overlay'),
-    
-    // Template selector
-    templateOptions: document.querySelectorAll('.template-option'),
-    
-    // Form actions
-    formActions: document.querySelector('.form-actions')
-};
+/**
+ * Linktree Builder Premium
+ * Final Complete Version with All Features
+ */
 
-// State management
-let state = {
-    notices: [],
-    medsosCheckbox: [],
-    medsos: [],
-    links: []
-};
-
-// Initialize the application
-function init() {
-    setupEventListeners();
-    loadFromLocalStorage();
-    updateUI();
-    setupDefaultItems();
-}
-
-// Event Listeners Setup
-function setupEventListeners() {
-    // Ticker type change
-    elements.tickerTypeRadios.forEach(radio => {
-        radio.addEventListener('change', handleTickerTypeChange);
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Linktree Builder Starting...');
     
-    // Add item buttons
-    elements.addNoticeBtn.addEventListener('click', () => addDynamicItem('notice'));
-    elements.addMedsosCheckboxBtn.addEventListener('click', () => addDynamicItem('medsosCheckbox'));
-    elements.addMedsosBtn.addEventListener('click', () => addDynamicItem('medsos'));
-    elements.addLinkBtn.addEventListener('click', () => addDynamicItem('link'));
+    // ==================== LOCAL STORAGE KEYS ====================
+    const STORAGE_KEY = 'linktree_builder_data';
     
-    // Main action buttons
-    elements.previewBtn.addEventListener('click', generatePreview);
-    elements.resetBtn.addEventListener('click', resetForm);
-    elements.copyBtn.addEventListener('click', copyHTML);
-    elements.downloadBtn.addEventListener('click', downloadHTML);
-    
-    // Template selection
-    elements.templateOptions.forEach(option => {
-        option.addEventListener('click', handleTemplateSelect);
-    });
-    
-    // Auto-save on input
-    const inputs = [
-        elements.bannerText,
-        elements.subBanner,
-        elements.img,
-        elements.nama,
-        elements.deskripsi,
-        elements.tickerText,
-        elements.footer
-    ];
-    
-    inputs.forEach(input => {
-        input.addEventListener('input', saveToLocalStorage);
-    });
-    
-    elements.timezone.addEventListener('change', saveToLocalStorage);
-}
-
-// Ticker Type Handler
-function handleTickerTypeChange(e) {
-    const type = e.target.value;
-    
-    // Hide all containers
-    elements.staticTickerContainer.classList.remove('active');
-    elements.digitalTickerContainer.classList.remove('active');
-    
-    // Show selected container
-    if (type === 'static') {
-        elements.staticTickerContainer.classList.add('active');
-    } else if (type === 'digital') {
-        elements.digitalTickerContainer.classList.add('active');
-    }
-    
-    saveToLocalStorage();
-}
-
-// Template Selection Handler
-function handleTemplateSelect(e) {
-    const target = e.currentTarget;
-    const template = target.dataset.template;
-    
-    // Remove active class from all options
-    elements.templateOptions.forEach(option => {
-        option.classList.remove('active');
-    });
-    
-    // Add active class to selected option
-    target.classList.add('active');
-    
-    // Update hidden input
-    elements.template.value = template;
-    
-    saveToLocalStorage();
-    updateUI();
-}
-
-// Dynamic Item Management
-function addDynamicItem(type) {
-    const item = createDynamicItem(type);
-    
-    switch(type) {
-        case 'notice':
-            state.notices.push(item);
-            break;
-        case 'medsosCheckbox':
-            state.medsosCheckbox.push(item);
-            break;
-        case 'medsos':
-            state.medsos.push(item);
-            break;
-        case 'link':
-            state.links.push(item);
-            break;
-    }
-    
-    renderDynamicItems();
-    saveToLocalStorage();
-}
-
-function createDynamicItem(type) {
-    const baseItem = {
-        id: Date.now() + Math.random(),
-        title: '',
-        content: ''
+    // ==================== DOM ELEMENTS ====================
+    const elements = {
+        bannerText: document.getElementById('bannerText'),
+        subBanner: document.getElementById('subBanner'),
+        tickerType: document.getElementById('tickerType'),
+        tickerText: document.getElementById('tickerText'),
+        img: document.getElementById('img'),
+        nama: document.getElementById('nama'),
+        deskripsi: document.getElementById('deskripsi'),
+        footer: document.getElementById('footer'),
+        template: document.getElementById('template'),
+        noticeContainer: document.getElementById('notice-container'),
+        medsosContainer: document.getElementById('medsos-container'),
+        linksContainer: document.getElementById('links-container'),
+        addNoticeBtn: document.getElementById('add-notice'),
+        addMedsosBtn: document.getElementById('add-medsos'),
+        addLinkBtn: document.getElementById('add-link'),
+        previewBtn: document.getElementById('preview-btn'),
+        resetBtn: document.getElementById('reset-btn'),
+        copyBtn: document.getElementById('copy-btn'),
+        downloadBtn: document.getElementById('download-btn'),
+        previewFrame: document.getElementById('preview-frame'),
+        htmlOutput: document.getElementById('html-output'),
+        iframePlaceholder: document.getElementById('iframe-placeholder'),
+        copyOverlay: document.getElementById('copy-overlay')
     };
     
-    switch(type) {
-        case 'notice':
-            return {
-                ...baseItem,
-                title: 'Informasi Penting',
-                content: 'Website GRATIS 100%'
-            };
-        case 'medsosCheckbox':
-            return {
-                ...baseItem,
-                title: 'Telegram',
-                content: 'https://t.me/username',
-                checked: true
-            };
-        case 'medsos':
-            return {
-                ...baseItem,
-                title: 'Instagram',
-                content: 'https://instagram.com/username'
-            };
-        case 'link':
-            return {
-                ...baseItem,
-                title: 'Website Saya',
-                content: 'https://example.com'
-            };
+    // Ticker containers
+    const staticContainer = document.getElementById('static-ticker-container');
+    const digitalContainer = document.getElementById('digital-ticker-container');
+    const analogContainer = document.getElementById('analog-clock-preview');
+    
+    // ==================== GLOBAL VARIABLES ====================
+    let digitalClockInterval = null;
+    let analogClockInterval = null;
+    let isInitializing = true;
+    
+    // ==================== TEMPLATES ====================
+    const templates = {
+        '1': {
+            name: 'Pixel Modern',
+            font: '"Press Start 2P", cursive',
+            primaryColor: '#00ff88',
+            secondaryColor: '#2b2b2b',
+            style: `
+                body {
+                    background: linear-gradient(45deg, #2b2b2b, #4a4a4a);
+                    font-family: "Press Start 2P", cursive;
+                    color: #00ff88;
+                }
+                .linktree-container {
+                    border: 4px solid #00ff88;
+                    box-shadow: 0 0 20px #00ff88;
+                    background: rgba(43, 43, 43, 0.95);
+                }
+                .linktree-btn {
+                    background: #2b2b2b;
+                    border: 2px solid #00ff88;
+                    color: #00ff88;
+                }
+                .linktree-btn:hover {
+                    background: #00ff88;
+                    color: #2b2b2b;
+                    transform: translateY(-2px);
+                }
+                .notice-box {
+                    background: rgba(0, 255, 136, 0.1);
+                    border: 2px solid #00ff88;
+                    color: #00ff88;
+                }
+                .ticker {
+                    color: #00ff88;
+                    border: 2px solid #00ff88;
+                    background: rgba(43, 43, 43, 0.9);
+                }
+            `
+        },
+        '2': {
+            name: 'Minimal Clean',
+            font: '"Poppins", sans-serif',
+            primaryColor: '#667eea',
+            secondaryColor: '#ffffff',
+            style: `
+                body {
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                    font-family: "Poppins", sans-serif;
+                    color: #333;
+                }
+                .linktree-container {
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                }
+                .linktree-btn {
+                    background: white;
+                    border: 1px solid #ddd;
+                    color: #333;
+                    transition: all 0.3s ease;
+                }
+                .linktree-btn:hover {
+                    border-color: #667eea;
+                    color: #667eea;
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+                .notice-box {
+                    background: rgba(102, 126, 234, 0.1);
+                    border: 1px solid #667eea;
+                    color: #667eea;
+                }
+                .ticker {
+                    color: #667eea;
+                    border: 1px solid #667eea;
+                    background: rgba(255, 255, 255, 0.9);
+                }
+            `
+        },
+        '3': {
+            name: 'Cyber Neon',
+            font: '"Poppins", sans-serif',
+            primaryColor: '#00dbde',
+            secondaryColor: '#000000',
+            style: `
+                body {
+                    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+                    font-family: "Poppins", sans-serif;
+                    color: white;
+                }
+                .linktree-container {
+                    background: rgba(0, 0, 0, 0.7);
+                    backdrop-filter: blur(10px);
+                    border: 2px solid #00dbde;
+                    box-shadow: 0 0 30px rgba(0, 219, 222, 0.5);
+                }
+                .linktree-btn {
+                    background: rgba(0, 219, 222, 0.1);
+                    border: 2px solid #00dbde;
+                    color: white;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .linktree-btn:hover {
+                    background: rgba(0, 219, 222, 0.3);
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 20px rgba(0, 219, 222, 0.5);
+                }
+                .notice-box {
+                    background: rgba(0, 219, 222, 0.1);
+                    border: 2px solid #00dbde;
+                    color: #00dbde;
+                }
+                .ticker {
+                    color: #00dbde;
+                    border: 2px solid #00dbde;
+                    background: rgba(0, 0, 0, 0.7);
+                    text-shadow: 0 0 10px rgba(0, 219, 222, 0.5);
+                }
+            `
+        }
+    };
+    
+    // ==================== UTILITY FUNCTIONS ====================
+    function saveToLocalStorage(data) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            console.log('💾 Data saved to localStorage');
+        } catch (error) {
+            console.error('❌ Failed to save to localStorage:', error);
+        }
     }
     
-    return baseItem;
-}
-
-function renderDynamicItems() {
-    renderItems(state.notices, elements.noticeContainer, 'notice');
-    renderItems(state.medsosCheckbox, elements.medsosCheckboxContainer, 'medsosCheckbox');
-    renderItems(state.medsos, elements.medsosContainer, 'medsos');
-    renderItems(state.links, elements.linksContainer, 'link');
-}
-
-function renderItems(items, container, type) {
-    container.innerHTML = '';
+    function loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                console.log('📂 Loading saved data from localStorage');
+                return JSON.parse(saved);
+            }
+        } catch (error) {
+            console.error('❌ Failed to load from localStorage:', error);
+        }
+        return null;
+    }
     
-    items.forEach((item, index) => {
-        const itemElement = createItemElement(item, index, type);
-        container.appendChild(itemElement);
-    });
-}
-
-function createItemElement(item, index, type) {
-    const div = document.createElement('div');
-    div.className = 'dynamic-item';
-    div.dataset.id = item.id;
+    function clearLocalStorage() {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🗑️ localStorage cleared');
+    }
     
-    let contentHTML = '';
+    function formatURL(url, platform = '') {
+        if (!url) return '';
+        
+        url = url.trim();
+        
+        // Jika sudah ada http:// atau https://, biarkan
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+        
+        // Jika hanya username (tanpa . dan tanpa /)
+        if (!url.includes('.') && !url.includes('/') && !url.includes('@')) {
+            if (platform) {
+                // Special cases
+                if (platform === 'whatsapp') {
+                    return `https://wa.me/${url.replace(/\D/g, '')}`;
+                }
+                if (platform === 'telegram') {
+                    return `https://t.me/${url.replace('@', '')}`;
+                }
+                return `https://${platform}.com/${url}`;
+            }
+            return `https://${url}.com`;
+        }
+        
+        // Jika dimulai dengan @
+        if (url.startsWith('@')) {
+            if (platform) {
+                return `https://${platform}.com/${url.substring(1)}`;
+            }
+            return `https://instagram.com/${url.substring(1)}`;
+        }
+        
+        // Jika ada www. tapi tanpa https://
+        if (url.startsWith('www.')) {
+            return 'https://' + url;
+        }
+        
+        // Jika ada domain tapi tanpa protokol
+        if (url.includes('.') && !url.includes('://')) {
+            return 'https://' + url;
+        }
+        
+        return url;
+    }
     
-    switch(type) {
-        case 'notice':
-            contentHTML = `
-                <div class="dynamic-item-header">
-                    <span class="dynamic-item-title">${item.title}</span>
-                    <button class="remove-btn" data-type="notice" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="dynamic-item-content">
-                    <input type="text" 
-                           class="notice-title" 
-                           value="${item.title}" 
-                           placeholder="Judul Informasi"
-                           data-index="${index}">
-                    <input type="text" 
-                           class="notice-content" 
-                           value="${item.content}" 
-                           placeholder="Konten Informasi"
-                           data-index="${index}">
-                </div>
-            `;
-            break;
+    function detectIcon(url, platform = '', text = '') {
+        const str = (url + ' ' + platform + ' ' + text).toLowerCase();
+        
+        const iconMap = {
+            'youtube': 'fa-youtube',
+            'github': 'fa-github',
+            'instagram': 'fa-instagram',
+            'linkedin': 'fa-linkedin',
+            'twitter': 'fa-x-twitter',
+            'x.com': 'fa-x-twitter',
+            'facebook': 'fa-facebook',
+            'telegram': 'fa-telegram',
+            'discord': 'fa-discord',
+            'spotify': 'fa-spotify',
+            'whatsapp': 'fa-whatsapp',
+            'tiktok': 'fa-tiktok',
+            'reddit': 'fa-reddit',
+            'twitch': 'fa-twitch',
+            'snapchat': 'fa-snapchat',
+            'portfolio': 'fa-briefcase',
+            'website': 'fa-globe',
+            'blog': 'fa-blog',
+            'store': 'fa-store',
+            'shop': 'fa-shopping-bag',
+            'donate': 'fa-heart',
+            'support': 'fa-hand-holding-heart',
+            'email': 'fa-envelope',
+            'mail': 'fa-envelope',
+            'calendar': 'fa-calendar',
+            'event': 'fa-calendar-alt',
+            'file': 'fa-file',
+            'document': 'fa-file-alt',
+            'download': 'fa-download',
+            'video': 'fa-video',
+            'music': 'fa-music',
+            'podcast': 'fa-podcast',
+            'book': 'fa-book',
+            'newsletter': 'fa-newspaper'
+        };
+        
+        for (const [keyword, icon] of Object.entries(iconMap)) {
+            if (str.includes(keyword)) {
+                return icon;
+            }
+        }
+        
+        return 'fa-link';
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        // Add to body
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+    
+    // ==================== CLOCK FUNCTIONS ====================
+    function updateDigitalClockPreview() {
+        const preview = document.getElementById('digitalClockPreview');
+        if (!preview) return;
+        
+        const showSeconds = document.getElementById('showSeconds')?.checked ?? true;
+        const showDate = document.getElementById('showDate')?.checked ?? false;
+        const militaryTime = document.getElementById('militaryTime')?.checked ?? false;
+        const blinkSeparator = document.getElementById('blinkSeparator')?.checked ?? true;
+        const timezone = document.getElementById('timezone')?.value || 'local';
+        
+        let now;
+        try {
+            if (timezone === 'local') {
+                now = new Date();
+            } else {
+                now = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
+            }
+        } catch (error) {
+            console.error('Error getting time:', error);
+            now = new Date();
+        }
+        
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        // Format 12/24 jam
+        let hourDisplay;
+        if (militaryTime) {
+            hourDisplay = hours.toString().padStart(2, '0');
+        } else {
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            hourDisplay = hours.toString().padStart(2, '0');
+            hourDisplay = `${hourDisplay} ${ampm}`;
+        }
+        
+        // Bangun string waktu
+        let timeString = `${hourDisplay}<span class="${blinkSeparator ? 'colon' : ''}">:</span>${minutes}`;
+        if (showSeconds) {
+            timeString += `<span class="${blinkSeparator ? 'colon' : ''}">:</span>${seconds}`;
+        }
+        
+        // Tambah tanggal jika dipilih
+        if (showDate) {
+            const date = now.toLocaleDateString('id-ID', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            preview.innerHTML = `<div style="font-size: 0.8em; margin-bottom: 5px;">${date}</div><div>${timeString}</div>`;
+        } else {
+            preview.innerHTML = timeString;
+        }
+    }
+    
+    function updateAnalogClockPreview() {
+        const clockFace = document.querySelector('.clock-face');
+        if (!clockFace) return;
+        
+        const showSeconds = document.getElementById('showAnalogSeconds')?.checked ?? true;
+        const showNumbers = document.getElementById('showAnalogNumbers')?.checked ?? true;
+        const smooth = document.getElementById('smoothAnalog')?.checked ?? true;
+        const timezone = document.getElementById('analogTimezone')?.value || 'local';
+        
+        let now;
+        try {
+            if (timezone === 'local') {
+                now = new Date();
+            } else {
+                now = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
+            }
+        } catch (error) {
+            console.error('Error getting time:', error);
+            now = new Date();
+        }
+        
+        const hours = now.getHours() % 12;
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const milliseconds = smooth ? now.getMilliseconds() : 0;
+        
+        // Hitung derajat
+        const secondDegrees = ((seconds + milliseconds / 1000) * 6) - 90;
+        const minuteDegrees = ((minutes + seconds / 60) * 6) - 90;
+        const hourDegrees = ((hours + minutes / 60) * 30) - 90;
+        
+        // Update jarum jam
+        const hourHand = document.querySelector('.hour-hand');
+        const minuteHand = document.querySelector('.minute-hand');
+        const secondHand = document.querySelector('.second-hand');
+        
+        if (hourHand) hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+        if (minuteHand) minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+        if (secondHand) {
+            secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+            secondHand.style.display = showSeconds ? 'block' : 'none';
+        }
+        
+        // Update angka jam
+        updateClockNumbers(showNumbers);
+    }
+    
+    function updateClockNumbers(showNumbers) {
+        const clockFace = document.querySelector('.clock-face');
+        if (!clockFace) return;
+        
+        // Hapus angka sebelumnya
+        const existingNumbers = clockFace.querySelectorAll('.clock-number');
+        existingNumbers.forEach(num => num.remove());
+        
+        if (!showNumbers) return;
+        
+        // Tambah angka 1-12
+        for (let i = 1; i <= 12; i++) {
+            const number = document.createElement('div');
+            number.className = 'clock-number';
+            number.textContent = i;
+            number.style.color = '#00dbde';
+            number.style.fontSize = '10px';
+            number.style.fontWeight = 'bold';
+            number.style.position = 'absolute';
+            number.style.transform = 'translate(-50%, -50%)';
             
-        case 'medsosCheckbox':
-            contentHTML = `
-                <div class="dynamic-item-header">
-                    <span class="dynamic-item-title">${item.title}</span>
-                    <button class="remove-btn" data-type="medsosCheckbox" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="dynamic-item-content">
-                    <div class="stylish-checkbox">
-                        <input type="checkbox" id="checkbox-${item.id}" 
-                               ${item.checked ? 'checked' : ''} 
-                               data-index="${index}">
-                        <label for="checkbox-${item.id}" class="checkbox-label">
-                            <span class="checkbox-custom"></span>
-                            <input type="text" 
-                                   class="medsos-title" 
-                                   value="${item.title}" 
-                                   placeholder="Nama Platform"
-                                   data-index="${index}">
-                        </label>
-                    </div>
-                    <input type="text" 
-                           class="medsos-content" 
-                           value="${item.content}" 
-                           placeholder="URL atau username"
-                           data-index="${index}">
-                </div>
-            `;
-            break;
+            // Hitung posisi
+            const angle = (i * 30) * (Math.PI / 180);
+            const radius = 40;
+            const x = 50 + radius * Math.sin(angle);
+            const y = 50 - radius * Math.cos(angle);
             
-        case 'medsos':
-        case 'link':
-            contentHTML = `
-                <div class="dynamic-item-header">
-                    <span class="dynamic-item-title">${item.title}</span>
-                    <button class="remove-btn" data-type="${type}" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="dynamic-item-content">
-                    <input type="text" 
-                           class="${type}-title" 
-                           value="${item.title}" 
-                           placeholder="${type === 'medsos' ? 'Nama Platform' : 'Judul Link'}"
-                           data-index="${index}">
-                    <input type="text" 
-                           class="${type}-content" 
-                           value="${item.content}" 
-                           placeholder="${type === 'medsos' ? 'URL atau username' : 'URL link'}"
-                           data-index="${index}">
-                </div>
-            `;
-            break;
+            number.style.left = `${x}%`;
+            number.style.top = `${y}%`;
+            
+            clockFace.appendChild(number);
+        }
     }
     
-    div.innerHTML = contentHTML;
-    
-    // Add event listeners
-    const removeBtn = div.querySelector('.remove-btn');
-    if (removeBtn) {
-        removeBtn.addEventListener('click', handleRemoveItem);
+    function startClockIntervals() {
+        // Hentikan interval sebelumnya
+        if (digitalClockInterval) clearInterval(digitalClockInterval);
+        if (analogClockInterval) clearInterval(analogClockInterval);
+        
+        // Digital clock interval
+        digitalClockInterval = setInterval(updateDigitalClockPreview, 100);
+        
+        // Analog clock interval
+        analogClockInterval = setInterval(updateAnalogClockPreview, 50);
     }
     
-    // Add input listeners for auto-save
-    const inputs = div.querySelectorAll('input[type="text"], input[type="checkbox"]');
-    inputs.forEach(input => {
-        input.addEventListener('input', handleItemUpdate);
-        input.addEventListener('change', handleItemUpdate);
-    });
-    
-    return div;
-}
-
-function handleRemoveItem(e) {
-    const type = e.currentTarget.dataset.type;
-    const index = parseInt(e.currentTarget.dataset.index);
-    
-    switch(type) {
-        case 'notice':
-            state.notices.splice(index, 1);
-            break;
-        case 'medsosCheckbox':
-            state.medsosCheckbox.splice(index, 1);
-            break;
-        case 'medsos':
-            state.medsos.splice(index, 1);
-            break;
-        case 'link':
-            state.links.splice(index, 1);
-            break;
+    function stopClockIntervals() {
+        if (digitalClockInterval) {
+            clearInterval(digitalClockInterval);
+            digitalClockInterval = null;
+        }
+        if (analogClockInterval) {
+            clearInterval(analogClockInterval);
+            analogClockInterval = null;
+        }
     }
     
-    renderDynamicItems();
-    saveToLocalStorage();
-}
-
-function handleItemUpdate(e) {
-    const input = e.target;
-    const type = getItemTypeFromClass(input.className);
-    const index = parseInt(input.dataset.index);
+    // ==================== DYNAMIC FIELDS ====================
+    function addNoticeField(text = '') {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <input type="text" class="notice-text" placeholder="Website ini GRATIS 100% dan DILARANG DIJUAL BELIKAN" value="${text || ''}">
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        elements.noticeContainer.appendChild(div);
+        
+        const removeBtn = div.querySelector('.btn-remove');
+        removeBtn.addEventListener('click', function() {
+            div.remove();
+            autoSave();
+            showNotification('Informasi dihapus', 'info');
+        });
+        
+        const input = div.querySelector('.notice-text');
+        input.addEventListener('input', autoSave);
+        
+        return div;
+    }
     
-    if (isNaN(index) || !type) return;
-    
-    let item;
-    switch(type) {
-        case 'notice':
-            item = state.notices[index];
-            if (input.classList.contains('notice-title')) {
-                item.title = input.value;
+    function addMedsosField(platform = '', url = '') {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <select class="platform-select">
+                <option value="">Pilih Platform</option>
+                <option value="youtube">YouTube</option>
+                <option value="instagram">Instagram</option>
+                <option value="github">GitHub</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="twitter">Twitter/X</option>
+                <option value="facebook">Facebook</option>
+                <option value="telegram">Telegram</option>
+                <option value="discord">Discord</option>
+                <option value="spotify">Spotify</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="tiktok">TikTok</option>
+                <option value="reddit">Reddit</option>
+                <option value="twitch">Twitch</option>
+                <option value="snapchat">Snapchat</option>
+            </select>
+            <input type="text" class="url-input" placeholder="username atau URL" value="${url || ''}">
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        elements.medsosContainer.appendChild(div);
+        
+        if (platform) {
+            div.querySelector('.platform-select').value = platform;
+        }
+        
+        const removeBtn = div.querySelector('.btn-remove');
+        removeBtn.addEventListener('click', function() {
+            div.remove();
+            autoSave();
+            showNotification('Media sosial dihapus', 'info');
+        });
+        
+        const select = div.querySelector('.platform-select');
+        const input = div.querySelector('.url-input');
+        
+        select.addEventListener('change', function() {
+            if (this.value === 'whatsapp') {
+                input.placeholder = '628123456789 (nomor WhatsApp)';
+            } else if (this.value === 'telegram') {
+                input.placeholder = '@username';
+            } else if (this.value) {
+                input.placeholder = `${this.value}.com/username`;
             } else {
-                item.content = input.value;
+                input.placeholder = 'username atau URL';
             }
-            break;
-        case 'medsosCheckbox':
-            item = state.medsosCheckbox[index];
-            if (input.classList.contains('medsos-title')) {
-                item.title = input.value;
-            } else if (input.classList.contains('medsos-content')) {
-                item.content = input.value;
-            } else if (input.type === 'checkbox') {
-                item.checked = input.checked;
-            }
-            break;
-        case 'medsos':
-            item = state.medsos[index];
-            if (input.classList.contains('medsos-title')) {
-                item.title = input.value;
+            autoSave();
+        });
+        
+        input.addEventListener('input', autoSave);
+        
+        return div;
+    }
+    
+    function addLinkField(platform = '', text = '', url = '') {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <select class="link-platform-select">
+                <option value="">Pilih Tipe</option>
+                <option value="website">Website/Blog</option>
+                <option value="portfolio">Portfolio</option>
+                <option value="store">Online Store</option>
+                <option value="donate">Donasi/Support</option>
+                <option value="email">Email</option>
+                <option value="calendar">Kalender</option>
+                <option value="file">File/Dokumen</option>
+                <option value="other">Lainnya</option>
+            </select>
+            <input type="text" class="link-text" placeholder="Nama link" value="${text || ''}">
+            <input type="text" class="link-url" placeholder="https://example.com" value="${url || ''}">
+            <button type="button" class="btn-remove" title="Hapus">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        elements.linksContainer.appendChild(div);
+        
+        if (platform) {
+            div.querySelector('.link-platform-select').value = platform;
+        }
+        
+        const removeBtn = div.querySelector('.btn-remove');
+        removeBtn.addEventListener('click', function() {
+            div.remove();
+            autoSave();
+            showNotification('Link dihapus', 'info');
+        });
+        
+        const platformSelect = div.querySelector('.link-platform-select');
+        const textInput = div.querySelector('.link-text');
+        const urlInput = div.querySelector('.link-url');
+        
+        platformSelect.addEventListener('change', function() {
+            const platform = this.value;
+            
+            if (platform === 'email') {
+                urlInput.placeholder = 'email@example.com';
+            } else if (platform === 'website' || platform === 'portfolio' || platform === 'store') {
+                urlInput.placeholder = 'https://example.com';
+            } else if (platform && platform !== 'other' && platform !== 'donate') {
+                urlInput.placeholder = `https://${platform}.com/username`;
             } else {
-                item.content = input.value;
+                urlInput.placeholder = 'https://example.com';
             }
-            break;
-        case 'link':
-            item = state.links[index];
-            if (input.classList.contains('link-title')) {
-                item.title = input.value;
+            
+            autoSave();
+        });
+        
+        textInput.addEventListener('input', autoSave);
+        urlInput.addEventListener('input', autoSave);
+        
+        return div;
+    }
+    
+    // ==================== FORM DATA COLLECTION ====================
+    function collectFormData() {
+        const notices = [];
+        const medsos = [];
+        const links = [];
+        
+        // Collect notices
+        elements.noticeContainer.querySelectorAll('.dynamic-item').forEach(item => {
+            const text = item.querySelector('.notice-text').value.trim();
+            if (text) {
+                notices.push(text);
+            }
+        });
+        
+        // Collect social media
+        elements.medsosContainer.querySelectorAll('.dynamic-item').forEach(item => {
+            const platform = item.querySelector('.platform-select').value;
+            const url = item.querySelector('.url-input').value.trim();
+            
+            if (platform && url) {
+                const formattedUrl = formatURL(url, platform);
+                medsos.push({
+                    platform: platform,
+                    url: formattedUrl,
+                    icon: detectIcon(formattedUrl, platform)
+                });
+            }
+        });
+        
+        // Collect custom links
+        elements.linksContainer.querySelectorAll('.dynamic-item').forEach(item => {
+            const platform = item.querySelector('.link-platform-select').value;
+            const text = item.querySelector('.link-text').value.trim();
+            const url = item.querySelector('.link-url').value.trim();
+            
+            if (text && url) {
+                const formattedUrl = formatURL(url, platform);
+                links.push({
+                    platform: platform,
+                    text: text,
+                    url: formattedUrl,
+                    icon: detectIcon(formattedUrl, platform, text)
+                });
+            }
+        });
+        
+        // Get ticker type and data
+        const tickerType = elements.tickerType.value || 'none';
+        let tickerData = {};
+        
+        if (tickerType === 'static') {
+            tickerData = {
+                type: 'static',
+                text: elements.tickerText?.value.trim() || ''
+            };
+        } else if (tickerType === 'digital') {
+            tickerData = {
+                type: 'digital',
+                showSeconds: document.getElementById('showSeconds')?.checked ?? true,
+                showDate: document.getElementById('showDate')?.checked ?? false,
+                militaryTime: document.getElementById('militaryTime')?.checked ?? false,
+                blinkSeparator: document.getElementById('blinkSeparator')?.checked ?? true,
+                timezone: document.getElementById('timezone')?.value || 'local'
+            };
+        } else if (tickerType === 'analog') {
+            tickerData = {
+                type: 'analog',
+                showSeconds: document.getElementById('showAnalogSeconds')?.checked ?? true,
+                showNumbers: document.getElementById('showAnalogNumbers')?.checked ?? true,
+                smooth: document.getElementById('smoothAnalog')?.checked ?? true,
+                timezone: document.getElementById('analogTimezone')?.value || 'local'
+            };
+        } else if (tickerType === 'none') {
+            tickerData = {
+                type: 'none'
+            };
+        }
+        
+        return {
+            bannerText: elements.bannerText?.value.trim() || '',
+            subBanner: elements.subBanner?.value.trim() || '',
+            ticker: tickerData,
+            img: elements.img?.value.trim() || '',
+            nama: elements.nama?.value.trim() || '',
+            deskripsi: elements.deskripsi?.value.trim() || '',
+            notices: notices,
+            medsos: medsos,
+            links: links,
+            footer: elements.footer?.value.trim() || '',
+            template: elements.template?.value || '1'
+        };
+    }
+    
+    function autoSave() {
+        if (isInitializing) return;
+        const data = collectFormData();
+        saveToLocalStorage(data);
+    }
+    
+    // ==================== TICKER TYPE HANDLING ====================
+    function setupTickerTypeSelector() {
+        const tickerType = document.getElementById('tickerType');
+        const staticContainer = document.getElementById('static-ticker-container');
+        const digitalContainer = document.getElementById('digital-ticker-container');
+        const analogContainer = document.getElementById('analog-ticker-container');
+        
+        function updateTickerDisplay() {
+            // Sembunyikan semua container
+            [staticContainer, digitalContainer, analogContainer].forEach(container => {
+                if (container) container.style.display = 'none';
+            });
+            
+            // Tampilkan container yang dipilih
+            const selectedType = tickerType.value;
+            if (selectedType === 'static') {
+                if (staticContainer) {
+                    staticContainer.style.display = 'block';
+                    staticContainer.classList.add('active');
+                }
+                stopClockIntervals();
+            } else if (selectedType === 'digital') {
+                if (digitalContainer) {
+                    digitalContainer.style.display = 'block';
+                    digitalContainer.classList.add('active');
+                }
+                updateDigitalClockPreview();
+                startClockIntervals();
+            } else if (selectedType === 'analog') {
+                if (analogContainer) {
+                    analogContainer.style.display = 'block';
+                    analogContainer.classList.add('active');
+                }
+                updateAnalogClockPreview();
+                startClockIntervals();
+            } else if (selectedType === 'none') {
+                stopClockIntervals();
+            }
+            
+            autoSave();
+        }
+        
+        // Initial setup
+        updateTickerDisplay();
+        
+        // Add event listener
+        tickerType.addEventListener('change', updateTickerDisplay);
+        
+        // Event listeners untuk konfigurasi jam digital
+        const digitalConfigs = ['showSeconds', 'showDate', 'militaryTime', 'blinkSeparator', 'timezone'];
+        digitalConfigs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', function() {
+                    updateDigitalClockPreview();
+                    autoSave();
+                });
+            }
+        });
+        
+        // Event listeners untuk konfigurasi jam analog
+        const analogConfigs = ['showAnalogSeconds', 'showAnalogNumbers', 'smoothAnalog', 'analogTimezone'];
+        analogConfigs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', function() {
+                    updateAnalogClockPreview();
+                    autoSave();
+                });
+            }
+        });
+    }
+    
+    function restoreTickerConfig(savedTicker) {
+        if (!savedTicker) return;
+        
+        // Set ticker type
+        const tickerType = savedTicker.type || 'none';
+        const tickerSelect = document.getElementById('tickerType');
+        if (tickerSelect) {
+            tickerSelect.value = tickerType;
+            // Trigger change event to update display
+            const event = new Event('change');
+            tickerSelect.dispatchEvent(event);
+        }
+        
+        // Restore config based on type
+        if (tickerType === 'static') {
+            if (elements.tickerText && savedTicker.text !== undefined) {
+                elements.tickerText.value = savedTicker.text;
+            }
+        } else if (tickerType === 'digital') {
+            const configs = ['showSeconds', 'showDate', 'militaryTime', 'blinkSeparator'];
+            configs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element && savedTicker[key] !== undefined) {
+                    element.checked = savedTicker[key];
+                }
+            });
+            
+            const timezoneSelect = document.getElementById('timezone');
+            if (timezoneSelect && savedTicker.timezone) {
+                timezoneSelect.value = savedTicker.timezone;
+            }
+        } else if (tickerType === 'analog') {
+            const configs = ['showAnalogSeconds', 'showAnalogNumbers', 'smoothAnalog'];
+            configs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element && savedTicker[key] !== undefined) {
+                    element.checked = savedTicker[key];
+                }
+            });
+            
+            const timezoneSelect = document.getElementById('analogTimezone');
+            if (timezoneSelect && savedTicker.timezone) {
+                timezoneSelect.value = savedTicker.timezone;
+            }
+        }
+    }
+    
+    // ==================== HTML GENERATION ====================
+    function generateDigitalClockScript(tickerConfig) {
+        return `
+        function updateDigitalClock() {
+            const clockElement = document.querySelector('.digital-clock');
+            if (!clockElement) return;
+            
+            let now;
+            try {
+                if ('${tickerConfig.timezone}' === 'local') {
+                    now = new Date();
+                } else {
+                    now = new Date(new Date().toLocaleString('en-US', { timeZone: '${tickerConfig.timezone}' }));
+                }
+            } catch (error) {
+                now = new Date();
+            }
+            
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            let hourDisplay;
+            if (${tickerConfig.militaryTime}) {
+                hourDisplay = hours.toString().padStart(2, '0');
             } else {
-                item.content = input.value;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                hourDisplay = hours.toString().padStart(2, '0') + ' ' + ampm;
             }
-            break;
+            
+            let timeString = hourDisplay + '<span class="${tickerConfig.blinkSeparator ? 'colon' : ''}">:</span>' + minutes;
+            if (${tickerConfig.showSeconds}) {
+                timeString += '<span class="${tickerConfig.blinkSeparator ? 'colon' : ''}">:</span>' + seconds;
+            }
+            
+            if (${tickerConfig.showDate}) {
+                const date = now.toLocaleDateString('id-ID', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                clockElement.innerHTML = '<div style="font-size: 0.8em; margin-bottom: 5px;">' + date + '</div><div>' + timeString + '</div>';
+            } else {
+                clockElement.innerHTML = timeString;
+            }
+        }
+        
+        updateDigitalClock();
+        setInterval(updateDigitalClock, 1000);
+    `;
     }
     
-    saveToLocalStorage();
-}
-
-function getItemTypeFromClass(className) {
-    if (className.includes('notice')) return 'notice';
-    if (className.includes('medsos')) return className.includes('checkbox') ? 'medsosCheckbox' : 'medsos';
-    if (className.includes('link')) return 'link';
-    return null;
-}
-
-// Setup Default Items
-function setupDefaultItems() {
-    if (state.notices.length === 0) {
-        state.notices.push({
-            id: 1,
-            title: 'Informasi Penting',
-            content: 'Website GRATIS 100%'
-        });
+    function generateAnalogClockScript(tickerConfig) {
+        return `
+        function updateAnalogClock() {
+            const clockFace = document.querySelector('.clock-face');
+            if (!clockFace) return;
+            
+            let now;
+            try {
+                if ('${tickerConfig.timezone}' === 'local') {
+                    now = new Date();
+                } else {
+                    now = new Date(new Date().toLocaleString('en-US', { timeZone: '${tickerConfig.timezone}' }));
+                }
+            } catch (error) {
+                now = new Date();
+            }
+            
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = ${tickerConfig.smooth} ? now.getMilliseconds() : 0;
+            
+            const secondDegrees = ((seconds + milliseconds / 1000) * 6) - 90;
+            const minuteDegrees = ((minutes + seconds / 60) * 6) - 90;
+            const hourDegrees = ((hours + minutes / 60) * 30) - 90;
+            
+            const hourHand = document.querySelector('.hour-hand');
+            const minuteHand = document.querySelector('.minute-hand');
+            const secondHand = document.querySelector('.second-hand');
+            
+            if (hourHand) hourHand.style.transform = 'rotate(' + hourDegrees + 'deg)';
+            if (minuteHand) minuteHand.style.transform = 'rotate(' + minuteDegrees + 'deg)';
+            if (secondHand) secondHand.style.transform = 'rotate(' + secondDegrees + 'deg)';
+            
+            updateClockNumbers();
+        }
+        
+        function updateClockNumbers() {
+            const clockFace = document.querySelector('.clock-face');
+            if (!clockFace || !${tickerConfig.showNumbers}) return;
+            
+            const existingNumbers = clockFace.querySelectorAll('.clock-number');
+            existingNumbers.forEach(num => num.remove());
+            
+            for (let i = 1; i <= 12; i++) {
+                const number = document.createElement('div');
+                number.className = 'clock-number';
+                number.textContent = i;
+                number.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#00dbde';
+                number.style.fontSize = '10px';
+                number.style.fontWeight = 'bold';
+                number.style.position = 'absolute';
+                number.style.transform = 'translate(-50%, -50%)';
+                
+                const angle = (i * 30) * (Math.PI / 180);
+                const radius = 35;
+                const x = 50 + radius * Math.sin(angle);
+                const y = 50 - radius * Math.cos(angle);
+                
+                number.style.left = x + '%';
+                number.style.top = y + '%';
+                
+                clockFace.appendChild(number);
+            }
+        }
+        
+        updateClockNumbers();
+        updateAnalogClock();
+        setInterval(updateAnalogClock, ${tickerConfig.smooth ? 50 : 1000});
+    `;
     }
     
-    if (state.medsosCheckbox.length === 0) {
-        state.medsosCheckbox.push({
-            id: 2,
-            title: 'Telegram',
-            content: 'https://t.me/username',
-            checked: true
-        });
-    }
-    
-    if (state.medsos.length === 0) {
-        state.medsos.push({
-            id: 3,
-            title: 'Instagram',
-            content: 'https://instagram.com/username'
-        });
-    }
-    
-    if (state.links.length === 0) {
-        state.links.push({
-            id: 4,
-            title: 'Website Saya',
-            content: 'https://example.com'
-        });
-    }
-    
-    renderDynamicItems();
-}
-
-// Generate Preview
-function generatePreview() {
-    const htmlContent = generateHTML();
-    
-    // Show preview
-    elements.iframePlaceholder.style.display = 'none';
-    elements.previewFrame.srcdoc = htmlContent;
-    
-    // Update HTML output
-    elements.htmlOutput.textContent = htmlContent;
-    
-    // Enable copy and download buttons
-    elements.copyBtn.disabled = false;
-    elements.downloadBtn.disabled = false;
-    
-    // Update UI
-    updateUI();
-}
-
-function generateHTML() {
-    const tickerType = document.querySelector('input[name="tickerType"]:checked').value;
-    const timezone = elements.timezone.value;
-    const template = elements.template.value;
-    
-    let tickerHTML = '';
-    let tickerScript = '';
-    
-    // Generate ticker based on type
-    if (tickerType === 'static') {
-        const tickerText = elements.tickerText.value || '2 | : 13 : 22';
-        tickerHTML = `<div class="ticker static-ticker">${tickerText}</div>`;
-    } else if (tickerType === 'digital') {
-        tickerHTML = `<div class="ticker digital-ticker" data-timezone="${timezone}" id="digitalClock">00:00:00</div>`;
-        tickerScript = `
-            <script>
-                function updateDigitalClock() {
-                    const clock = document.getElementById('digitalClock');
-                    const timezone = clock.dataset.timezone;
-                    
-                    let options = {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: false
-                    };
-                    
-                    let time;
-                    if (timezone === 'local') {
-                        time = new Date();
-                    } else {
-                        time = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
+    function generatePreviewHTML(data) {
+        const template = templates[data.template] || templates['1'];
+        
+        // Banner HTML
+        let bannerHTML = '';
+        if (data.bannerText) {
+            bannerHTML += `<h1 class="banner-title">${data.bannerText}</h1>`;
+        }
+        if (data.subBanner) {
+            bannerHTML += `<p class="banner-subtitle">${data.subBanner}</p>`;
+        }
+        
+        // Ticker HTML berdasarkan type
+        let tickerHTML = '';
+        let clockCSS = '';
+        let clockScript = '';
+        
+        if (data.ticker && data.ticker.type !== 'none') {
+            if (data.ticker.type === 'static' && data.ticker.text) {
+                tickerHTML = `<div class="ticker">${data.ticker.text}</div>`;
+            } else if (data.ticker.type === 'digital') {
+                const clockId = 'digital-clock-' + Date.now();
+                tickerHTML = `<div id="${clockId}" class="digital-clock"></div>`;
+                clockCSS = `
+                    .digital-clock {
+                        font-family: 'Courier New', monospace;
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        text-align: center;
+                        color: ${template.primaryColor};
+                        padding: 10px;
+                        margin-bottom: 20px;
+                        background: rgba(0, 0, 0, 0.2);
+                        border-radius: 8px;
+                        display: inline-block;
                     }
                     
-                    const hours = String(time.getHours()).padStart(2, '0');
-                    const minutes = String(time.getMinutes()).padStart(2, '0');
-                    const seconds = String(time.getSeconds()).padStart(2, '0');
+                    .digital-clock .colon {
+                        animation: blink 1s infinite;
+                    }
+                `;
+                clockScript = generateDigitalClockScript(data.ticker);
+            } else if (data.ticker.type === 'analog') {
+                const clockId = 'analog-clock-' + Date.now();
+                tickerHTML = `
+                    <div id="${clockId}" class="analog-clock-container">
+                        <div class="analog-clock">
+                            <div class="clock-face">
+                                <div class="hand hour-hand"></div>
+                                <div class="hand minute-hand"></div>
+                                <div class="hand second-hand" style="display: ${data.ticker.showSeconds ? 'block' : 'none'}"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                clockCSS = `
+                    .analog-clock-container {
+                        display: flex;
+                        justify-content: center;
+                        margin-bottom: 20px;
+                    }
                     
-                    clock.textContent = \`\${hours}:\${minutes}:\${seconds}\`;
-                }
-                
-                setInterval(updateDigitalClock, 1000);
-                updateDigitalClock();
-            </script>
-        `;
-    }
-    
-    // Generate social media with checkboxes
-    let medsosCheckboxHTML = '';
-    if (state.medsosCheckbox.length > 0) {
-        medsosCheckboxHTML = '<div class="social-checkboxes">';
-        state.medsosCheckbox.forEach(item => {
-            medsosCheckboxHTML += `
-                <div class="social-checkbox-item">
-                    <input type="checkbox" id="cb-${item.id}" ${item.checked ? 'checked' : ''} disabled>
-                    <label for="cb-${item.id}">
-                        <span class="checkbox-icon">✓</span>
-                        ${item.title}
-                    </label>
-                    <span class="social-url">${item.content}</span>
-                </div>
-            `;
-        });
-        medsosCheckboxHTML += '</div>';
-    }
-    
-    // Generate regular social media
-    let medsosHTML = '';
-    if (state.medsos.length > 0) {
-        medsosHTML = '<div class="social-links">';
-        state.medsos.forEach(item => {
-            medsosHTML += `
-                <a href="${item.content}" class="social-link" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-${item.title.toLowerCase()}"></i>
-                    ${item.title}
-                </a>
-            `;
-        });
-        medsosHTML += '</div>';
-    }
-    
-    // Generate links
-    let linksHTML = '';
-    if (state.links.length > 0) {
-        linksHTML = '<div class="custom-links">';
-        state.links.forEach(item => {
-            linksHTML += `
-                <a href="${item.content}" class="custom-link" target="_blank" rel="noopener noreferrer">
-                    ${item.title}
-                </a>
-            `;
-        });
-        linksHTML += '</div>';
-    }
-    
-    // Generate notices
-    let noticesHTML = '';
-    if (state.notices.length > 0) {
-        noticesHTML = '<div class="notices">';
-        state.notices.forEach(item => {
-            noticesHTML += `
-                <div class="notice">
-                    <strong>${item.title}:</strong> ${item.content}
-                </div>
-            `;
-        });
-        noticesHTML += '</div>';
-    }
-    
-    // Get template styles
-    const templateStyles = getTemplateStyles(template);
-    
-    // Generate full HTML
-    return `<!DOCTYPE html>
+                    .analog-clock {
+                        width: 80px;
+                        height: 80px;
+                        border: 3px solid ${template.primaryColor};
+                        border-radius: 50%;
+                        position: relative;
+                        background: rgba(0, 0, 0, 0.3);
+                    }
+                    
+                    .clock-face {
+                        width: 100%;
+                        height: 100%;
+                        position: relative;
+                    }
+                    
+                    .clock-face::after {
+                        content: '';
+                        position: absolute;
+                        width: 8px;
+                        height: 8px;
+                        background: ${template.primaryColor};
+                        border-radius: 50%;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                    
+                    .hand {
+                        position: absolute;
+                        background: ${template.primaryColor};
+                        transform-origin: bottom center;
+                        border-radius: 2px 2px 0 0;
+                    }
+                    
+                    .hour-hand {
+                        width: 3px;
+                        height: 20px;
+                        top: calc(50% - 20px);
+                        left: calc(50% - 1.5px);
+                    }
+                    
+                    .minute-hand {
+                        width: 2px;
+                        height: 30px;
+                        top: calc(50% - 30px);
+                        left: calc(50% - 1px);
+                    }
+                    
+                    .second-hand {
+                        width: 1px;
+                        height: 35px;
+                        top: calc(50% - 35px);
+                        left: calc(50% - 0.5px);
+                        background: #ff6b6b;
+                    }
+                `;
+                clockScript = generateAnalogClockScript(data.ticker);
+            }
+        }
+        
+        // Notice boxes HTML
+        let noticesHTML = '';
+        if (data.notices.length > 0) {
+            data.notices.forEach(notice => {
+                noticesHTML += `<div class="notice-box">${notice}</div>`;
+            });
+        }
+        
+        // Social media buttons
+        let medsosHTML = '';
+        if (data.medsos.length > 0) {
+            medsosHTML = '<div class="social-links">';
+            data.medsos.forEach(item => {
+                medsosHTML += `
+                    <a href="${item.url}" target="_blank" class="linktree-btn medsos-btn" rel="noopener noreferrer">
+                        <i class="fab ${item.icon}"></i>
+                    </a>
+                `;
+            });
+            medsosHTML += '</div>';
+        }
+        
+        // Custom links
+        let linksHTML = '';
+        if (data.links.length > 0) {
+            linksHTML = '<div class="links-container">';
+            data.links.forEach(item => {
+                linksHTML += `
+                    <a href="${item.url}" target="_blank" class="linktree-btn custom-link" rel="noopener noreferrer">
+                        <i class="fas ${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                `;
+            });
+            linksHTML += '</div>';
+        }
+        
+        return `
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${elements.nama.value || 'Linktree'} - ${elements.bannerText.value || 'Portfolio'}</title>
+    <title>${data.nama || 'Linktree'} - Linktree</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        ${templateStyles}
+        ${template.style}
+        
+        ${clockCSS}
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
         
         * {
             margin: 0;
@@ -588,47 +1166,44 @@ function generateHTML() {
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: ${template.font};
         }
         
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-            padding: 30px;
-        }
-        
-        .header {
+        .linktree-container {
+            max-width: 480px;
+            width: 100%;
+            padding: 40px;
+            border-radius: 24px;
             text-align: center;
-            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out;
         }
         
-        .banner {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
+        .banner-title {
+            font-size: 1.8rem;
             margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 700;
         }
         
-        .sub-banner {
-            color: #666;
-            font-size: 1rem;
+        .banner-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
             margin-bottom: 20px;
         }
         
-        .profile-section {
-            text-align: center;
-            margin-bottom: 30px;
+        .ticker {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
         }
         
         .profile-img {
@@ -636,429 +1211,511 @@ function generateHTML() {
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #4361ee;
+            border: 3px solid rgba(255, 255, 255, 0.2);
             margin: 0 auto 20px;
+            display: ${data.img ? 'block' : 'none'};
         }
         
-        .name {
-            font-size: 1.8rem;
-            font-weight: 600;
+        .profile-name {
+            font-size: 1.5rem;
             margin-bottom: 10px;
-            color: #333;
+            font-weight: 700;
+            display: ${data.nama ? 'block' : 'none'};
         }
         
-        .bio {
-            color: #666;
+        .profile-bio {
             font-size: 1rem;
-            max-width: 500px;
-            margin: 0 auto;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            display: ${data.deskripsi ? 'block' : 'none'};
         }
         
-        .ticker-section {
-            background: #4361ee;
-            color: white;
+        .notice-box {
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 20px;
-            text-align: center;
-            font-family: monospace;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-        }
-        
-        .notices {
-            background: #fff3cd;
-            border: 2px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .notice {
-            margin-bottom: 10px;
-        }
-        
-        .notice:last-child {
-            margin-bottom: 0;
-        }
-        
-        .notice strong {
-            color: #d35400;
-        }
-        
-        .social-checkboxes {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .social-checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-        
-        .social-checkbox-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .social-checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: not-allowed;
-        }
-        
-        .social-checkbox-item label {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .checkbox-icon {
-            width: 20px;
-            height: 20px;
-            background: #28a745;
-            color: white;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        
-        .social-url {
-            color: #666;
             font-size: 0.9rem;
-            font-family: monospace;
+            text-align: left;
+            line-height: 1.5;
         }
         
         .social-links {
-            display: grid;
+            display: flex;
+            justify-content: center;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         
-        .social-link {
+        .medsos-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: linear-gradient(45deg, #4361ee, #3a0ca3);
-            color: white;
+            justify-content: center;
             text-decoration: none;
-            border-radius: 10px;
-            transition: transform 0.3s ease;
-        }
-        
-        .social-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-        }
-        
-        .social-link i {
             font-size: 1.2rem;
-            width: 30px;
+            transition: all 0.3s ease;
         }
         
-        .custom-links {
-            display: grid;
+        .links-container {
+            display: flex;
+            flex-direction: column;
             gap: 15px;
             margin-bottom: 30px;
         }
         
-        .custom-link {
-            display: block;
-            padding: 15px;
-            background: #f8f9fa;
-            color: #333;
+        .linktree-btn {
+            padding: 18px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            border-radius: 10px;
-            text-align: center;
-            border: 2px solid #e9ecef;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             transition: all 0.3s ease;
-            font-weight: 500;
+            cursor: pointer;
         }
         
-        .custom-link:hover {
-            background: #4361ee;
-            color: white;
-            border-color: #4361ee;
+        .custom-link i {
+            font-size: 1.1rem;
         }
         
-        .footer {
-            text-align: center;
-            color: #666;
+        .footer-text {
             font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 20px;
             padding-top: 20px;
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: ${data.footer ? 'block' : 'none'};
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-                border-radius: 15px;
+            .linktree-container {
+                padding: 25px 20px;
             }
             
-            .banner {
-                font-size: 2rem;
-            }
-            
-            .profile-img {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .name {
+            .banner-title {
                 font-size: 1.5rem;
             }
             
-            .social-checkbox-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
+            .ticker {
+                font-size: 1rem;
+                padding: 6px 12px;
             }
             
-            .social-url {
-                font-size: 0.8rem;
-                word-break: break-all;
+            .analog-clock {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .hour-hand { height: 15px; top: calc(50% - 15px); }
+            .minute-hand { height: 22px; top: calc(50% - 22px); }
+            .second-hand { height: 25px; top: calc(50% - 25px); }
+            
+            .digital-clock {
+                font-size: 1rem;
+                padding: 8px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1 class="banner">${elements.bannerText.value || 'Linktree'}</h1>
-            <p class="sub-banner">${elements.subBanner.value || 'Personal Portfolio'}</p>
-        </header>
+    <div class="linktree-container">
+        ${bannerHTML}
+        ${tickerHTML}
         
-        <div class="profile-section">
-            ${elements.img.value ? `<img src="${elements.img.value}" alt="Profile" class="profile-img">` : ''}
-            <h2 class="name">${elements.nama.value || 'Your Name'}</h2>
-            <p class="bio">${elements.deskripsi.value || 'Personal description goes here...'}</p>
-        </div>
-        
-        ${tickerType !== 'none' ? `<div class="ticker-section">${tickerHTML}</div>` : ''}
+        ${data.img ? `<img src="${data.img}" alt="${data.nama || 'Profile'}" class="profile-img">` : ''}
+        ${data.nama ? `<h1 class="profile-name">${data.nama}</h1>` : ''}
+        ${data.deskripsi ? `<p class="profile-bio">${data.deskripsi}</p>` : ''}
         
         ${noticesHTML}
-        
-        ${medsosCheckboxHTML}
-        
         ${medsosHTML}
-        
         ${linksHTML}
         
-        <footer class="footer">
-            <p>${elements.footer.value || '© 2024 Your Brand'}</p>
-        </footer>
+        ${data.footer ? `<p class="footer-text">${data.footer}</p>` : ''}
     </div>
     
-    ${tickerScript}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Button hover effects
+            const buttons = document.querySelectorAll('.linktree-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            ${clockScript}
+        });
+    </script>
 </body>
 </html>`;
-}
-
-function getTemplateStyles(template) {
-    const styles = {
-        1: `
-            .social-link { background: linear-gradient(45deg, #4361ee, #3a0ca3); }
-            .ticker-section { background: #4361ee; }
-            .notice { background: #fff3cd; border-color: #ffeaa7; }
-        `,
-        2: `
-            .social-link { background: linear-gradient(45deg, #28a745, #20c997); }
-            .ticker-section { background: #28a745; }
-            .notice { background: #d1ecf1; border-color: #bee5eb; }
-            .container { border: 2px solid #28a745; }
-        `,
-        3: `
-            .social-link { background: linear-gradient(45deg, #f72585, #7209b7); }
-            .ticker-section { background: linear-gradient(45deg, #f72585, #7209b7); }
-            .notice { background: #0d0d0d; border-color: #f72585; color: #fff; }
-            body { background: #0d0d0d; }
-            .container { background: #1a1a1a; color: #fff; border: 2px solid #f72585; }
-            .banner, .name { color: #fff; }
-            .sub-banner, .bio, .footer { color: #ccc; }
-            .social-checkbox-item { background: #2d2d2d; border-color: #444; color: #fff; }
-            .custom-link { background: #2d2d2d; border-color: #444; color: #fff; }
-            .custom-link:hover { background: #f72585; }
-        `
-    };
+    }
     
-    return styles[template] || styles[1];
-}
-
-// Copy HTML to Clipboard
-function copyHTML() {
-    const html = elements.htmlOutput.textContent;
-    navigator.clipboard.writeText(html).then(() => {
-        showCopyFeedback();
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-}
-
-function showCopyFeedback() {
-    elements.copyOverlay.classList.add('show');
-    setTimeout(() => {
-        elements.copyOverlay.classList.remove('show');
-    }, 2000);
-}
-
-// Download HTML
-function downloadHTML() {
-    const html = elements.htmlOutput.textContent;
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'linktree.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// Reset Form
-function resetForm() {
-    if (!confirm('Apakah Anda yakin ingin mereset semua data?')) return;
+    function generateFullHTML(data) {
+        return generatePreviewHTML(data);
+    }
     
-    // Reset form inputs
-    elements.bannerText.value = '';
-    elements.subBanner.value = '';
-    elements.img.value = '';
-    elements.nama.value = '';
-    elements.deskripsi.value = '';
-    elements.tickerText.value = '2 | : 13 : 22';
-    elements.footer.value = '';
-    
-    // Reset ticker
-    document.querySelector('input[name="tickerType"][value="static"]').checked = true;
-    elements.staticTickerContainer.classList.add('active');
-    elements.digitalTickerContainer.classList.remove('active');
-    elements.timezone.value = 'local';
-    
-    // Reset template
-    elements.templateOptions.forEach(option => option.classList.remove('active'));
-    elements.templateOptions[0].classList.add('active');
-    elements.template.value = '1';
-    
-    // Reset state
-    state = {
-        notices: [],
-        medsosCheckbox: [],
-        medsos: [],
-        links: []
-    };
-    
-    // Reset preview
-    elements.iframePlaceholder.style.display = 'flex';
-    elements.previewFrame.srcdoc = '';
-    elements.htmlOutput.textContent = '// HTML akan muncul di sini...';
-    elements.copyBtn.disabled = true;
-    elements.downloadBtn.disabled = true;
-    
-    // Setup default items
-    setupDefaultItems();
-    
-    // Clear localStorage
-    localStorage.clear();
-    
-    updateUI();
-}
-
-// Local Storage Management
-function saveToLocalStorage() {
-    const data = {
-        bannerText: elements.bannerText.value,
-        subBanner: elements.subBanner.value,
-        img: elements.img.value,
-        nama: elements.nama.value,
-        deskripsi: elements.deskripsi.value,
-        tickerText: elements.tickerText.value,
-        footer: elements.footer.value,
-        tickerType: document.querySelector('input[name="tickerType"]:checked').value,
-        timezone: elements.timezone.value,
-        template: elements.template.value,
-        state: state
-    };
-    
-    localStorage.setItem('linktreeBuilder', JSON.stringify(data));
-}
-
-function loadFromLocalStorage() {
-    const saved = localStorage.getItem('linktreeBuilder');
-    if (!saved) return;
-    
-    try {
-        const data = JSON.parse(saved);
+    // ==================== EVENT HANDLERS ====================
+    function handlePreview() {
+        console.log('👁️ Generating preview...');
         
-        // Load form values
-        elements.bannerText.value = data.bannerText || '';
-        elements.subBanner.value = data.subBanner || '';
-        elements.img.value = data.img || '';
-        elements.nama.value = data.nama || '';
-        elements.deskripsi.value = data.deskripsi || '';
-        elements.tickerText.value = data.tickerText || '2 | : 13 : 22';
-        elements.footer.value = data.footer || '';
+        const data = collectFormData();
         
-        // Load ticker settings
-        if (data.tickerType) {
-            document.querySelector(`input[name="tickerType"][value="${data.tickerType}"]`).checked = true;
-            handleTickerTypeChange({ target: document.querySelector(`input[name="tickerType"][value="${data.tickerType}"]`) });
+        // Validation
+        if (!data.nama || !data.deskripsi) {
+            showNotification('⚠️ Harap isi Nama dan Deskripsi terlebih dahulu', 'error');
+            return;
         }
         
-        if (data.timezone) {
-            elements.timezone.value = data.timezone;
+        if (data.medsos.length === 0 && data.links.length === 0) {
+            showNotification('🔗 Tambahkan minimal satu link (media sosial atau custom link)', 'error');
+            return;
         }
         
-        // Load template
-        if (data.template) {
-            elements.template.value = data.template;
-            elements.templateOptions.forEach(option => {
-                option.classList.remove('active');
-                if (option.dataset.template === data.template) {
-                    option.classList.add('active');
-                }
+        // Save current state
+        saveToLocalStorage(data);
+        
+        // Generate preview
+        const previewHTML = generatePreviewHTML(data);
+        const fullHTML = generateFullHTML(data);
+        
+        // Update iframe
+        elements.previewFrame.srcdoc = previewHTML;
+        elements.iframePlaceholder.style.display = 'none';
+        elements.previewFrame.style.display = 'block';
+        
+        // Update code output
+        elements.htmlOutput.textContent = fullHTML;
+        
+        // Enable buttons
+        elements.copyBtn.disabled = false;
+        elements.downloadBtn.disabled = false;
+        
+        showNotification('✅ Preview berhasil digenerate', 'success');
+        console.log('✅ Preview generated successfully');
+    }
+    
+    function handleReset() {
+        if (!confirm('Reset semua input? Semua data akan dihapus dan tidak bisa dikembalikan.')) {
+            return;
+        }
+        
+        // Clear all inputs
+        elements.bannerText.value = '';
+        elements.subBanner.value = '';
+        elements.tickerText.value = '';
+        elements.img.value = '';
+        elements.nama.value = '';
+        elements.deskripsi.value = '';
+        elements.footer.value = '';
+        
+        // Clear dynamic containers
+        elements.noticeContainer.innerHTML = '';
+        elements.medsosContainer.innerHTML = '';
+        elements.linksContainer.innerHTML = '';
+        
+        // Reset template selector
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        const defaultTemplate = document.querySelector('.template-option[data-template="1"]');
+        if (defaultTemplate) {
+            defaultTemplate.classList.add('active');
+        }
+        elements.template.value = '1';
+        
+        // Reset ticker to none
+        elements.tickerType.value = 'none';
+        const event = new Event('change');
+        elements.tickerType.dispatchEvent(event);
+        
+        // Reset clock configs
+        if (document.getElementById('showSeconds')) {
+            document.getElementById('showSeconds').checked = true;
+        }
+        if (document.getElementById('showDate')) {
+            document.getElementById('showDate').checked = false;
+        }
+        if (document.getElementById('militaryTime')) {
+            document.getElementById('militaryTime').checked = false;
+        }
+        if (document.getElementById('blinkSeparator')) {
+            document.getElementById('blinkSeparator').checked = true;
+        }
+        if (document.getElementById('timezone')) {
+            document.getElementById('timezone').value = 'local';
+        }
+        
+        if (document.getElementById('showAnalogSeconds')) {
+            document.getElementById('showAnalogSeconds').checked = true;
+        }
+        if (document.getElementById('showAnalogNumbers')) {
+            document.getElementById('showAnalogNumbers').checked = true;
+        }
+        if (document.getElementById('smoothAnalog')) {
+            document.getElementById('smoothAnalog').checked = true;
+        }
+        if (document.getElementById('analogTimezone')) {
+            document.getElementById('analogTimezone').value = 'local';
+        }
+        
+        // Reset preview
+        elements.iframePlaceholder.style.display = 'flex';
+        elements.previewFrame.style.display = 'none';
+        elements.previewFrame.srcdoc = '';
+        
+        // Reset code output
+        elements.htmlOutput.textContent = '// HTML akan muncul di sini...';
+        
+        // Disable buttons
+        elements.copyBtn.disabled = true;
+        elements.downloadBtn.disabled = true;
+        
+        // Clear localStorage
+        clearLocalStorage();
+        
+        // Add empty fields
+        setTimeout(() => {
+            addNoticeField();
+            addMedsosField();
+            addLinkField();
+        }, 100);
+        
+        showNotification('✅ Form telah direset', 'success');
+        console.log('✅ Form reset complete');
+    }
+    
+    async function handleCopy() {
+        const html = elements.htmlOutput.textContent;
+        
+        try {
+            await navigator.clipboard.writeText(html);
+            elements.copyOverlay.classList.add('show');
+            setTimeout(() => {
+                elements.copyOverlay.classList.remove('show');
+            }, 2000);
+            showNotification('✅ HTML berhasil disalin ke clipboard', 'success');
+            console.log('✅ HTML copied to clipboard');
+        } catch (err) {
+            console.error('❌ Failed to copy:', err);
+            
+            // Fallback method
+            const textArea = document.createElement('textarea');
+            textArea.value = html;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                elements.copyOverlay.classList.add('show');
+                setTimeout(() => {
+                    elements.copyOverlay.classList.remove('show');
+                }, 2000);
+                showNotification('✅ HTML berhasil disalin ke clipboard', 'success');
+            } catch (fallbackErr) {
+                console.error('❌ Fallback copy failed:', fallbackErr);
+                showNotification('❌ Gagal menyalin. Silakan copy manual dari text area.', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+    }
+    
+    function handleDownload() {
+        const html = elements.htmlOutput.textContent;
+        const data = collectFormData();
+        const filename = `linktree-${data.nama.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'linktree'}.html`;
+        
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification(`✅ File berhasil diunduh: ${filename}`, 'success');
+        console.log('✅ File downloaded:', filename);
+    }
+    
+    // ==================== INITIALIZATION ====================
+    function restoreSavedData() {
+        const saved = loadFromLocalStorage();
+        
+        if (saved) {
+            console.log('🔄 Restoring saved data...');
+            
+            // Restore basic fields
+            elements.bannerText.value = saved.bannerText || '';
+            elements.subBanner.value = saved.subBanner || '';
+            elements.img.value = saved.img || '';
+            elements.nama.value = saved.nama || '';
+            elements.deskripsi.value = saved.deskripsi || '';
+            elements.footer.value = saved.footer || '';
+            
+            // Restore ticker config
+            if (saved.ticker) {
+                restoreTickerConfig(saved.ticker);
+            }
+            
+            // Restore template
+            if (saved.template) {
+                elements.template.value = saved.template;
+                document.querySelectorAll('.template-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (option.dataset.template === saved.template) {
+                        option.classList.add('active');
+                    }
+                });
+            }
+            
+            // Clear existing dynamic fields
+            elements.noticeContainer.innerHTML = '';
+            elements.medsosContainer.innerHTML = '';
+            elements.linksContainer.innerHTML = '';
+            
+            // Restore notices
+            if (saved.notices && saved.notices.length > 0) {
+                saved.notices.forEach(notice => {
+                    addNoticeField(notice);
+                });
+            } else {
+                addNoticeField();
+            }
+            
+            // Restore social media
+            if (saved.medsos && saved.medsos.length > 0) {
+                saved.medsos.forEach(item => {
+                    let displayUrl = item.url;
+                    try {
+                        const urlObj = new URL(item.url);
+                        displayUrl = urlObj.pathname.replace(/^\//, '') || urlObj.hostname;
+                    } catch (e) {}
+                    addMedsosField(item.platform, displayUrl);
+                });
+            } else {
+                addMedsosField();
+            }
+            
+            // Restore custom links
+            if (saved.links && saved.links.length > 0) {
+                saved.links.forEach(item => {
+                    addLinkField(item.platform, item.text, item.url);
+                });
+            } else {
+                addLinkField();
+            }
+            
+            console.log('✅ Saved data restored');
+            
+            // Auto-generate preview if we have enough data
+            if (saved.nama && saved.deskripsi && 
+                (saved.notices?.length > 0 || saved.medsos?.length > 0 || saved.links?.length > 0)) {
+                setTimeout(() => {
+                    handlePreview();
+                }, 500);
+            }
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    function initialize() {
+        console.log('⚡ Initializing Linktree Builder...');
+        
+        // Setup event listeners
+        elements.addNoticeBtn.addEventListener('click', () => addNoticeField());
+        elements.addMedsosBtn.addEventListener('click', () => addMedsosField());
+        elements.addLinkBtn.addEventListener('click', () => addLinkField());
+        elements.previewBtn.addEventListener('click', handlePreview);
+        elements.resetBtn.addEventListener('click', handleReset);
+        elements.copyBtn.addEventListener('click', handleCopy);
+        elements.downloadBtn.addEventListener('click', handleDownload);
+        
+        // Template selector
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.template-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                elements.template.value = this.dataset.template;
+                autoSave();
             });
+        });
+        
+        // Setup ticker type selector
+        setupTickerTypeSelector();
+        
+        // Auto-save on input for basic fields
+        [elements.bannerText, elements.subBanner, elements.tickerText, 
+         elements.img, elements.nama, elements.deskripsi, elements.footer].forEach(input => {
+            if (input) input.addEventListener('input', autoSave);
+        });
+        
+        // Try to restore saved data
+        const hasSavedData = restoreSavedData();
+        
+        // If no saved data, start with empty form
+        if (!hasSavedData) {
+            // Clear all inputs (double-check)
+            elements.bannerText.value = '';
+            elements.subBanner.value = '';
+            elements.tickerText.value = '';
+            elements.img.value = '';
+            elements.nama.value = '';
+            elements.deskripsi.value = '';
+            elements.footer.value = '';
+            
+            // Clear dynamic containers
+            elements.noticeContainer.innerHTML = '';
+            elements.medsosContainer.innerHTML = '';
+            elements.linksContainer.innerHTML = '';
+            
+            // Add empty fields
+            addNoticeField();
+            addMedsosField();
+            addLinkField();
+            
+            console.log('🆕 Starting with empty form');
         }
         
-        // Load state
-        if (data.state) {
-            state = data.state;
-            renderDynamicItems();
-        }
-        
-    } catch (error) {
-        console.error('Error loading saved data:', error);
+        isInitializing = false;
+        console.log('🎉 Linktree Builder initialized successfully!');
     }
-}
-
-// Update UI
-function updateUI() {
-    // Update form actions position
-    const hasContent = elements.bannerText.value || 
-                      elements.nama.value || 
-                      state.notices.length > 0 ||
-                      state.medsos.length > 0 ||
-                      state.links.length > 0;
     
-    if (hasContent) {
-        elements.previewBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Preview & HTML';
-    } else {
-        elements.previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview & Generate HTML';
-    }
-}
-
-// Initialize the app
-document.addEventListener('DOMContentLoaded', init);
+    // Start the application
+    initialize();
+    
+    // Clean up intervals when page unloads
+    window.addEventListener('beforeunload', function() {
+        stopClockIntervals();
+    });
+});
